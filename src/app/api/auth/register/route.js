@@ -64,7 +64,7 @@ export async function POST(req) {
       return Response.json(
         {
           message:
-            "Registration successful. Email is not configured locally, so your account was verified automatically.",
+            "Registration successful. Email verification is not configured, so your account was verified automatically.",
         },
         { status: 201 },
       );

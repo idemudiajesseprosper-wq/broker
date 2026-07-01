@@ -3,7 +3,7 @@ function getBaseUrl() {
 }
 
 function canSkipEmail() {
-  return process.env.NODE_ENV !== "production";
+  return !process.env.RESEND_API_KEY;
 }
 
 export function buildUrl(path, token) {

@@ -118,6 +118,8 @@ export default function RegisterPage() {
   return (
     <AuthShell
       maxWidth="max-w-[460px]"
+      showNav
+      stickyNav
       subtitle="Create your BSX Capital Exchange account"
       title="Start investing"
     >

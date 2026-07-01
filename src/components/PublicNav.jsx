@@ -1,5 +1,6 @@
 "use client";
 
+import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import BrandLockup from "@/components/Brand";
@@ -48,11 +49,11 @@ export default function PublicNav({ sticky = false }) {
           </div>
           <button
             aria-label="Toggle navigation"
-            className="flex h-10 min-w-16 items-center justify-center rounded-md border border-white/10 px-3 text-xs font-medium text-white/70 md:hidden"
+            className="flex h-10 w-10 items-center justify-center rounded-md border border-white/10 text-white/70 transition hover:border-[rgba(245,166,35,0.3)] hover:text-white md:hidden"
             onClick={() => setOpen((value) => !value)}
             type="button"
           >
-            {open ? "Close" : "Menu"}
+            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
 

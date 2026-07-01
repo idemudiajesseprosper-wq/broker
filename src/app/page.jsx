@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   LockKeyhole,
   Mail,
+  Menu,
   ReceiptText,
   ShieldCheck,
   Smartphone,
@@ -18,6 +19,7 @@ import {
   UserPlus,
   Users,
   Wallet,
+  X,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -570,6 +572,7 @@ function ChartTooltip({ active, payload }) {
 /* ---------------------------------------------------------------------- */
 
 export default function LandingPage() {
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [timeframe, setTimeframe] = useState("1D");
   const [pairIdx, setPairIdx] = useState(0);
   const pair = PAIRS[pairIdx];
@@ -672,7 +675,7 @@ export default function LandingPage() {
       </div>
 
       {/* Nav */}
-      <nav className="sticky top-0 z-30 border-b border-[rgba(255,255,255,0.06)] bg-[rgba(5,5,8,0.75)] backdrop-blur-md">
+      <nav className="sticky top-0 z-30 border-b border-[rgba(255,255,255,0.06)] bg-[rgba(5,5,8,0.82)] backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4">
           <div className="flex items-center gap-2">
             <span className="flex h-8 w-8 items-center justify-center rounded-md bg-gradient-to-br from-[#F5A623] to-[#E8C84A] font-display text-sm font-bold text-[#050508]">
@@ -683,7 +686,7 @@ export default function LandingPage() {
             </span>
           </div>
           <div className="hidden items-center gap-8 text-sm text-white/60 md:flex">
-            <a className="transition hover:text-white" href="#plans">
+            <a className="transition hover:text-white" href="/plans">
               Plans
             </a>
             <a className="transition hover:text-white" href="#markets">
@@ -696,9 +699,9 @@ export default function LandingPage() {
               FAQ
             </a>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="hidden items-center gap-3 sm:flex">
             <a
-              className="hidden text-sm font-medium text-white/70 transition hover:text-white sm:block"
+              className="text-sm font-medium text-white/70 transition hover:text-white"
               href="/login"
             >
               Sign in
@@ -710,7 +713,57 @@ export default function LandingPage() {
               Get started
             </a>
           </div>
+          <button
+            aria-expanded={mobileNavOpen}
+            aria-label="Toggle navigation"
+            className="flex h-10 w-10 items-center justify-center rounded-md border border-white/10 text-white/70 transition hover:border-[rgba(245,166,35,0.3)] hover:text-white md:hidden"
+            onClick={() => setMobileNavOpen((value) => !value)}
+            type="button"
+          >
+            {mobileNavOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
+          </button>
         </div>
+        {mobileNavOpen ? (
+          <div className="border-t border-white/[0.06] bg-[#08080c] px-5 py-4 md:hidden">
+            <div className="grid gap-2">
+              {[
+                ["Plans", "/plans"],
+                ["Markets", "#markets"],
+                ["Features", "#features"],
+                ["FAQ", "#faq"],
+              ].map(([label, href]) => (
+                <a
+                  className="rounded-md px-3 py-3 text-sm text-white/65 transition hover:bg-white/[0.04] hover:text-[#F5A623]"
+                  href={href}
+                  key={href}
+                  onClick={() => setMobileNavOpen(false)}
+                >
+                  {label}
+                </a>
+              ))}
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <a
+                className="rounded-md border border-[rgba(255,255,255,0.08)] px-4 py-3 text-center text-sm text-white/70"
+                href="/login"
+                onClick={() => setMobileNavOpen(false)}
+              >
+                Sign in
+              </a>
+              <a
+                className="rounded-md bg-gradient-to-r from-[#F5A623] to-[#E8C84A] px-4 py-3 text-center text-sm font-semibold text-[#050508]"
+                href="/register"
+                onClick={() => setMobileNavOpen(false)}
+              >
+                Get started
+              </a>
+            </div>
+          </div>
+        ) : null}
       </nav>
 
       {/* Hero */}
@@ -752,7 +805,7 @@ export default function LandingPage() {
               </a>
               <a
                 className="w-full rounded-md border border-[rgba(255,255,255,0.12)] px-6 py-3 text-center text-sm font-medium text-white/75 transition hover:border-[rgba(245,166,35,0.35)] hover:text-white sm:w-auto"
-                href="#plans"
+                href="/plans"
               >
                 View plans
               </a>
