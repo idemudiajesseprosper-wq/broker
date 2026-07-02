@@ -16,6 +16,34 @@ export function unauthorized(message = "Unauthorized") {
 
 export function serverError(error) {
   console.error(error);
+
+  if (error?.message === "MONGODB_URI is not defined") {
+    return Response.json(
+      { error: "Database is not configured. Add MONGODB_URI in Vercel." },
+      { status: 500 },
+    );
+  }
+
+  if (error?.message === "JWT_SECRET is not defined") {
+    return Response.json(
+      { error: "Authentication is not configured. Add JWT_SECRET in Vercel." },
+      { status: 500 },
+    );
+  }
+
+  if (
+    error?.name === "MongooseServerSelectionError" ||
+    error?.message?.includes("Server selection timed out")
+  ) {
+    return Response.json(
+      {
+        error:
+          "Database connection failed. Check MONGODB_URI and MongoDB Atlas Network Access.",
+      },
+      { status: 503 },
+    );
+  }
+
   return Response.json({ error: "Internal server error" }, { status: 500 });
 }
 

@@ -1,0 +1,23 @@
+
+> broker@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.9 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.87.141:3000
+- Environments: .env.local
+✓ Ready in 5.6s
+Creating turbopack project { dir: 'C:\\Users\\BOSS\\broker', testMode: true }
+○ Compiling proxy ...
+
+○ Compiling / ...
+ GET / 200 in 26.2s (next.js: 24.3s, application-code: 1939ms)
+ GET / 200 in 1326ms (next.js: 46ms, application-code: 1280ms)
+○ Compiling /api/auth/me ...
+ GET /api/auth/me 401 in 36.3s (next.js: 23.5s, application-code: 12.7s)
+ GET / 200 in 984ms (next.js: 40ms, application-code: 944ms)
+ GET /api/auth/me 401 in 43ms (next.js: 18ms, application-code: 25ms)
+ GET / 200 in 326ms (next.js: 33ms, application-code: 293ms)
+ GET /api/auth/me 401 in 60ms (next.js: 39ms, application-code: 22ms)
+ GET / 200 in 653ms (next.js: 13ms, application-code: 640ms)
+ GET /api/auth/me 401 in 34ms (next.js: 12ms, application-code: 22ms)

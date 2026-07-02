@@ -4,6 +4,7 @@ import User from "@/models/User";
 import { createAccountForUser } from "@/utils/account";
 import { serverError } from "@/utils/api";
 import { sendVerificationEmail } from "@/utils/email";
+import { notifySmartsuppSignup } from "@/utils/smartsupp";
 
 export const runtime = "nodejs";
 
@@ -48,6 +49,12 @@ export async function POST(req) {
     user.phone = phone;
 
     await user.save();
+
+    try {
+      await notifySmartsuppSignup(user);
+    } catch (error) {
+      console.error("Smartsupp signup notification failed:", error);
+    }
 
     const emailResult = await sendVerificationEmail(
       user.email,

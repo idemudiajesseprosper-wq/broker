@@ -28,6 +28,10 @@ export async function connectDB() {
       })
       .then((mongooseInstance) => {
         return mongooseInstance;
+      })
+      .catch((error) => {
+        cached.promise = null;
+        throw error;
       });
   }
 

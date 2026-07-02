@@ -1,4 +1,5 @@
 import { Inter, Syne } from "next/font/google";
+import SmartsuppWidget from "@/components/SmartsuppWidget";
 import { AuthProvider } from "@/context/AuthContext";
 import { ToastProvider } from "@/context/ToastContext";
 import "./globals.css";
@@ -30,6 +31,7 @@ export default function RootLayout({ children }) {
         <ToastProvider>
           <AuthProvider>{children}</AuthProvider>
         </ToastProvider>
+        <SmartsuppWidget />
       </body>
     </html>
   );

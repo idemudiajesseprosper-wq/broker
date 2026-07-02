@@ -5,6 +5,7 @@ import {
   ArrowDownRight,
   ArrowUpRight,
   BellRing,
+  Bot,
   ChevronDown,
   CircleHelp,
   CreditCard,
@@ -13,6 +14,7 @@ import {
   Mail,
   Menu,
   ReceiptText,
+  Send,
   ShieldCheck,
   Smartphone,
   Timer,
@@ -72,8 +74,19 @@ function makeSeries(n, start, seed, drift = 1) {
   return arr;
 }
 
+const BTC_MARKET_URL =
+  "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,ngn&include_24hr_change=true&include_24hr_vol=true";
+const BTC_FALLBACK_START = 100000;
+
 const PAIRS = [
-  { symbol: "BTC/USD", name: "Bitcoin", start: 68420, seed: 11, drift: 1 },
+  {
+    symbol: "BTC/USD",
+    name: "Bitcoin",
+    start: BTC_FALLBACK_START,
+    seed: 11,
+    drift: 1,
+    live: true,
+  },
   { symbol: "ETH/USD", name: "Ethereum", start: 3640, seed: 27, drift: 1.3 },
   { symbol: "SOL/USD", name: "Solana", start: 168, seed: 42, drift: 1.7 },
   { symbol: "XRP/USD", name: "XRP", start: 0.62, seed: 63, drift: 0.9 },
@@ -81,14 +94,11 @@ const PAIRS = [
 
 const TIMEFRAMES = ["1H", "4H", "1D", "1W"];
 
-const tickerItems = [
-  ["BTC/USD", "$68,420", "+2.8%"],
+const baseTickerItems = [
+  ["DOMINANCE", "52.1%", "+0.3%"],
   ["ETH/USD", "$3,640", "+1.4%"],
   ["SOL/USD", "$168.20", "+5.1%"],
   ["XRP/USD", "$0.62", "-0.6%"],
-  ["BTC/NGN", "NGN 102.6M", "+1.9%"],
-  ["24H VOL", "$42.8B", "+6.4%"],
-  ["DOMINANCE", "52.1%", "+0.3%"],
 ];
 
 const stats = [
@@ -270,11 +280,149 @@ const faqs = [
   },
 ];
 
+const publicProofItems = [
+  {
+    type: "earning",
+    label: "Earning",
+    name: "Mohammed from UAE",
+    detail: "just earned",
+    amount: "$5,856",
+    icon: ArrowUpRight,
+    color: "#16C784",
+  },
+  {
+    type: "withdrawal",
+    label: "Withdrawal",
+    name: "Ava from North Carolina",
+    detail: "just withdrew",
+    amount: "$2,430",
+    icon: Wallet,
+    color: "#F5A623",
+  },
+  {
+    type: "earning",
+    label: "Earning",
+    name: "Daniel from London",
+    detail: "just earned",
+    amount: "$7,120",
+    icon: ArrowUpRight,
+    color: "#16C784",
+  },
+  {
+    type: "withdrawal",
+    label: "Withdrawal",
+    name: "Grace from Lagos",
+    detail: "just withdrew",
+    amount: "$1,980",
+    icon: ArrowDownRight,
+    color: "#38BDF8",
+  },
+];
+
+const chatPrompts = [
+  "How do I create an account?",
+  "How do deposits work?",
+  "I need help with withdrawals",
+];
+
+const chatAnswers = {
+  "How do I create an account?":
+    "Creating an account is simple. Open the registration form, enter your correct details, confirm your access credentials, then complete verification when your dashboard asks for it.",
+  "How do deposits work?":
+    "To deposit, sign in to your dashboard, open Deposit, enter the amount you want to fund, and follow the payment instructions shown there. Your deposit request stays visible in your transaction history.",
+  "I need help with withdrawals":
+    "For withdrawals, sign in, open Withdraw, enter your payout details, and submit the request. The team reviews the request and you can track the status from your dashboard.",
+  default:
+    "I can help with registration, deposits, withdrawals, investment plans, account security, and dashboard questions. Tell me what you need and I will guide you step by step.",
+};
+
+const testimonials = [
+  {
+    name: "Am Aish",
+    location: "North Carolina",
+    role: "Verified client",
+    photo:
+      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=240&q=80",
+    quote:
+      "I came across BSX Capital Exchange while looking for a simpler way to manage Bitcoin investments. The dashboard made funding, tracking, and withdrawals easy to follow.",
+    result: "$5,856 earned",
+  },
+  {
+    name: "Mohammed A.",
+    location: "UAE",
+    role: "Verified investor",
+    photo:
+      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=240&q=80",
+    quote:
+      "The process felt clear from signup to deposit. I could see my activity, follow my plan, and understand what was happening without waiting for long explanations.",
+    result: "$3,420 withdrawn",
+  },
+  {
+    name: "Grace O.",
+    location: "Lagos",
+    role: "Active trader",
+    photo:
+      "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=240&q=80",
+    quote:
+      "I like that everything is in one place. My account records, plan details, notifications, and support access are easy to use on mobile.",
+    result: "$1,980 withdrawn",
+  },
+];
+
 function fmt(n, d = 2) {
   return n.toLocaleString("en-US", {
     minimumFractionDigits: d,
     maximumFractionDigits: d,
   });
+}
+
+function formatCurrency(n, currency = "USD") {
+  return new Intl.NumberFormat("en-US", {
+    currency,
+    maximumFractionDigits: n >= 1000 ? 0 : 2,
+    minimumFractionDigits: n >= 1000 ? 0 : 2,
+    style: "currency",
+  }).format(n);
+}
+
+function formatCompactCurrency(n, currency = "USD") {
+  return new Intl.NumberFormat("en-US", {
+    currency,
+    maximumFractionDigits: 1,
+    notation: "compact",
+    style: "currency",
+  }).format(n);
+}
+
+function formatTickerChange(value) {
+  if (typeof value !== "number") return "Live";
+  return `${value >= 0 ? "+" : ""}${fmt(value)}%`;
+}
+
+async function fetchBitcoinMarket() {
+  const response = await fetch(BTC_MARKET_URL, {
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error("Unable to load Bitcoin market price");
+  }
+
+  const data = await response.json();
+  const bitcoin = data?.bitcoin;
+  const priceUsd = Number(bitcoin?.usd);
+
+  if (!Number.isFinite(priceUsd) || priceUsd <= 0) {
+    throw new Error("Bitcoin market price was not valid");
+  }
+
+  return {
+    change24h: Number(bitcoin?.usd_24h_change),
+    priceNgn: Number(bitcoin?.ngn),
+    priceUsd,
+    updatedAt: new Date(),
+    volume24h: Number(bitcoin?.usd_24h_vol),
+  };
 }
 
 /* ---------------------------------------------------------------------- */
@@ -568,6 +716,243 @@ function ChartTooltip({ active, payload }) {
 }
 
 /* ---------------------------------------------------------------------- */
+/* Public activity and assistant widgets                                  */
+/* ---------------------------------------------------------------------- */
+
+function PublicProofPopup({ item }) {
+  const Icon = item.icon;
+
+  return (
+    <aside
+      aria-live="polite"
+      className="proof-popup fixed bottom-4 left-4 z-40 w-[min(390px,calc(100vw-32px))] overflow-hidden rounded-md border border-[rgba(245,166,35,0.45)] bg-[#050508] shadow-[0_22px_60px_rgba(0,0,0,0.42)] sm:left-6"
+    >
+      <div className="flex items-center gap-4 px-4 py-3.5">
+        <span
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md"
+          style={{
+            backgroundColor: `${item.color}1F`,
+            color: item.color,
+          }}
+        >
+          <Icon aria-hidden="true" className="h-6 w-6" />
+        </span>
+        <span className="min-w-0">
+          <span className="block text-sm font-bold text-white">
+            {item.label}
+          </span>
+          <span className="block text-xs leading-5 text-white/70">
+            {item.name} has {item.detail}{" "}
+            <b className="font-bold text-white">{item.amount}</b>
+          </span>
+        </span>
+      </div>
+      <span
+        className="block h-0.5 proof-timer"
+        style={{ backgroundColor: item.color }}
+      />
+    </aside>
+  );
+}
+
+function answerQuestion(question) {
+  const normalized = question.toLowerCase();
+
+  if (chatAnswers[question]) return chatAnswers[question];
+  if (normalized.includes("deposit") || normalized.includes("fund")) {
+    return chatAnswers["How do deposits work?"];
+  }
+  if (normalized.includes("withdraw") || normalized.includes("cash")) {
+    return chatAnswers["I need help with withdrawals"];
+  }
+  if (
+    normalized.includes("register") ||
+    normalized.includes("account") ||
+    normalized.includes("sign up")
+  ) {
+    return chatAnswers["How do I create an account?"];
+  }
+  if (normalized.includes("plan") || normalized.includes("invest")) {
+    return "Investment plans are shown on the Plans page and inside your dashboard after signup. Choose a plan, review its terms, fund your wallet, and subscribe from the dashboard.";
+  }
+  if (normalized.includes("secure") || normalized.includes("safe")) {
+    return "Your account uses protected sessions, identity-aware workflows, and transaction records. Keep your login details private and use accurate profile information for smoother reviews.";
+  }
+  if (normalized.includes("support") || normalized.includes("chat")) {
+    return "You are chatting with the BSX AI assistant now. Share the issue you need help with, and I will guide you with the next best step.";
+  }
+
+  return chatAnswers.default;
+}
+
+function PublicChatAssistant() {
+  const [isOpen, setIsOpen] = useState(true);
+  const [messages, setMessages] = useState([
+    {
+      from: "assistant",
+      text: "Welcome. I am the BSX AI assistant. Ask me about registration, deposits, withdrawals, plans, or account support.",
+    },
+  ]);
+  const [draft, setDraft] = useState("");
+
+  const sendQuestion = (question) => {
+    const cleanQuestion = question.trim();
+    if (!cleanQuestion) return;
+
+    setMessages((current) => [
+      ...current,
+      { from: "user", text: cleanQuestion },
+      { from: "assistant", text: answerQuestion(cleanQuestion) },
+    ]);
+    setDraft("");
+    setIsOpen(true);
+  };
+
+  return (
+    <section className="fixed bottom-4 right-4 z-50 sm:right-6">
+      {isOpen ? (
+        <div className="chat-card w-[min(380px,calc(100vw-32px))] rounded-[14px] border border-white/10 bg-white p-4 text-[#171717] shadow-[0_24px_70px_rgba(0,0,0,0.35)]">
+          <div className="flex items-start justify-between gap-4">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#F1F5F9] text-[#94A3B8]">
+              <Bot aria-hidden="true" className="h-6 w-6" />
+            </span>
+            <button
+              aria-label="Close chat assistant"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+              onClick={() => setIsOpen(false)}
+              type="button"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          <p className="mt-4 text-[15px] leading-6 text-slate-700">
+            Welcome! Whether you have a specific question or need assistance, we
+            are here for you. What would you like to know?
+          </p>
+          <div className="mt-4 max-h-56 space-y-3 overflow-y-auto rounded-md bg-slate-50 p-3">
+            {messages.map((message, index) => (
+              <div
+                className={`flex ${message.from === "user" ? "justify-end" : "justify-start"}`}
+                key={`${message.from}-${index}-${message.text}`}
+              >
+                <p
+                  className={`max-w-[88%] rounded-md px-3 py-2 text-xs leading-5 ${
+                    message.from === "user"
+                      ? "bg-[#2445E8] text-white"
+                      : "bg-white text-slate-700 shadow-sm"
+                  }`}
+                >
+                  {message.text}
+                </p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {chatPrompts.map((prompt) => (
+              <button
+                className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-200 hover:text-slate-900"
+                key={prompt}
+                onClick={() => sendQuestion(prompt)}
+                type="button"
+              >
+                {prompt}
+              </button>
+            ))}
+          </div>
+          <form
+            className="mt-4 flex gap-2"
+            onSubmit={(event) => {
+              event.preventDefault();
+              sendQuestion(draft);
+            }}
+          >
+            <input
+              aria-label="Ask the AI assistant"
+              className="min-w-0 flex-1 rounded-full border border-slate-200 px-4 py-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#2445E8]"
+              onChange={(event) => setDraft(event.target.value)}
+              placeholder="Type your question..."
+              value={draft}
+            />
+            <button
+              aria-label="Send message"
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#2445E8] text-white transition hover:bg-[#1D39C4]"
+              type="submit"
+            >
+              <Send aria-hidden="true" className="h-4 w-4" />
+            </button>
+          </form>
+          <button
+            className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#2445E8] px-5 text-sm font-semibold text-white transition hover:bg-[#1D39C4]"
+            onClick={() => sendQuestion("I want to start a chat with support")}
+            type="button"
+          >
+            <Mail aria-hidden="true" className="h-4 w-4" />
+            Let's chat
+          </button>
+        </div>
+      ) : null}
+      <button
+        aria-label={isOpen ? "Chat assistant is open" : "Open chat assistant"}
+        className="relative mt-3 flex h-14 w-14 items-center justify-center rounded-full bg-[#2445E8] text-white shadow-[0_16px_45px_rgba(36,69,232,0.42)] transition hover:bg-[#1D39C4]"
+        onClick={() => setIsOpen((value) => !value)}
+        type="button"
+      >
+        {isOpen ? (
+          <X className="h-6 w-6" />
+        ) : (
+          <CircleHelp className="h-7 w-7" />
+        )}
+        <span className="absolute -right-0.5 top-0 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#EA3943] px-1 text-[10px] font-bold text-white">
+          1
+        </span>
+      </button>
+    </section>
+  );
+}
+
+function TestimonialPopup({ testimonial, onClose }) {
+  return (
+    <aside className="testimonial-popup fixed bottom-[92px] left-4 z-40 w-[min(390px,calc(100vw-32px))] rounded-[10px] border border-[rgba(255,255,255,0.12)] bg-[#08080d] p-4 shadow-[0_22px_60px_rgba(0,0,0,0.42)] sm:left-6">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex min-w-0 items-center gap-3">
+          <span
+            aria-label={testimonial.name}
+            className="h-12 w-12 shrink-0 rounded-full bg-cover bg-center"
+            role="img"
+            style={{ backgroundImage: `url(${testimonial.photo})` }}
+          />
+          <div className="min-w-0">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#F5A623]">
+              Client testimonial
+            </p>
+            <h3 className="font-display mt-1 truncate text-base font-bold text-white">
+              {testimonial.name}
+            </h3>
+            <p className="text-xs text-white/42">
+              {testimonial.location} - {testimonial.role}
+            </p>
+          </div>
+        </div>
+        <button
+          aria-label="Close testimonial popup"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/10 text-white/50 transition hover:border-white/20 hover:text-white"
+          onClick={onClose}
+          type="button"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+      <p className="mt-3 text-sm leading-6 text-white/68">
+        "{testimonial.quote}"
+      </p>
+      <p className="mt-3 font-mono text-xs font-semibold text-[#16C784]">
+        {testimonial.result}
+      </p>
+    </aside>
+  );
+}
+
+/* ---------------------------------------------------------------------- */
 /* Main page                                                              */
 /* ---------------------------------------------------------------------- */
 
@@ -575,29 +960,56 @@ export default function LandingPage() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [timeframe, setTimeframe] = useState("1D");
   const [pairIdx, setPairIdx] = useState(0);
+  const [bitcoinMarket, setBitcoinMarket] = useState(null);
+  const [bitcoinMarketStatus, setBitcoinMarketStatus] = useState("loading");
   const pair = PAIRS[pairIdx];
+  const pairBasePrice =
+    pair.live && bitcoinMarket?.priceUsd ? bitcoinMarket.priceUsd : pair.start;
 
   const [candles, setCandles] = useState(() =>
-    makeCandles(48, pair.start, pair.seed),
+    makeCandles(48, pairBasePrice, pair.seed),
   );
-  const [livePrice, setLivePrice] = useState(pair.start);
+  const [livePrice, setLivePrice] = useState(pairBasePrice);
   const [flash, setFlash] = useState(null);
-  const prevPrice = useRef(pair.start);
-  const openRef = useRef(pair.start);
+  const prevPrice = useRef(pairBasePrice);
+  const openRef = useRef(pairBasePrice);
 
   useEffect(() => {
-    const fresh = makeCandles(48, pair.start, pair.seed + timeframe.length);
+    let cancelled = false;
+
+    const loadMarket = async () => {
+      try {
+        const market = await fetchBitcoinMarket();
+        if (cancelled) return;
+        setBitcoinMarket(market);
+        setBitcoinMarketStatus("live");
+      } catch {
+        if (!cancelled) setBitcoinMarketStatus("stale");
+      }
+    };
+
+    loadMarket();
+    const interval = setInterval(loadMarket, 30000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, []);
+
+  useEffect(() => {
+    const fresh = makeCandles(48, pairBasePrice, pair.seed + timeframe.length);
     setCandles(fresh);
-    setLivePrice(pair.start);
-    prevPrice.current = pair.start;
-    openRef.current = pair.start;
-  }, [pair.start, pair.seed, timeframe]);
+    setLivePrice(pairBasePrice);
+    prevPrice.current = pairBasePrice;
+    openRef.current = pairBasePrice;
+  }, [pairBasePrice, pair.seed, timeframe]);
 
   useEffect(() => {
+    if (pair.live) return;
     const interval = setInterval(() => {
       setCandles((prev) => {
         const last = prev[prev.length - 1];
-        const vol = pair.start * 0.0009;
+        const vol = pairBasePrice * 0.0009;
         const newClose = last.close + (Math.random() - 0.48) * vol;
         const updated = {
           ...last,
@@ -612,7 +1024,7 @@ export default function LandingPage() {
       });
     }, 1900);
     return () => clearInterval(interval);
-  }, [pair.start, livePrice]);
+  }, [pair.live, pairBasePrice, livePrice]);
 
   useEffect(() => {
     if (!flash) return;
@@ -625,14 +1037,65 @@ export default function LandingPage() {
 
   const marketSeries = useMemo(
     () =>
-      PAIRS.map((p) => ({
-        ...p,
-        data: makeSeries(60, p.start, p.seed + 100, p.drift),
-      })),
-    [],
+      PAIRS.map((p) => {
+        const base =
+          p.live && bitcoinMarket?.priceUsd ? bitcoinMarket.priceUsd : p.start;
+        return {
+          ...p,
+          data: makeSeries(60, base, p.seed + 100, p.drift),
+        };
+      }),
+    [bitcoinMarket?.priceUsd],
   );
   const [marketTab, setMarketTab] = useState(0);
   const activeSeries = marketSeries[marketTab];
+  const tickerItems = useMemo(() => {
+    const btcChange = bitcoinMarket?.change24h;
+    const btcItems = [
+      [
+        "BTC/USD",
+        bitcoinMarket?.priceUsd
+          ? formatCurrency(bitcoinMarket.priceUsd)
+          : "Loading live price",
+        formatTickerChange(btcChange),
+      ],
+      [
+        "BTC/NGN",
+        bitcoinMarket?.priceNgn
+          ? formatCompactCurrency(bitcoinMarket.priceNgn, "NGN")
+          : "Loading live price",
+        formatTickerChange(btcChange),
+      ],
+    ];
+
+    if (bitcoinMarket?.volume24h) {
+      btcItems.push([
+        "24H VOL",
+        formatCompactCurrency(bitcoinMarket.volume24h),
+        formatTickerChange(btcChange),
+      ]);
+    }
+
+    return [...btcItems, ...baseTickerItems];
+  }, [bitcoinMarket]);
+  const [proofIndex, setProofIndex] = useState(0);
+  const [testimonialIndex, setTestimonialIndex] = useState(0);
+  const [showTestimonialPopup, setShowTestimonialPopup] = useState(true);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setProofIndex((index) => (index + 1) % publicProofItems.length);
+    }, 5200);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (!showTestimonialPopup) return;
+    const interval = setInterval(() => {
+      setTestimonialIndex((index) => (index + 1) % testimonials.length);
+    }, 7200);
+    return () => clearInterval(interval);
+  }, [showTestimonialPopup]);
 
   return (
     <main
@@ -659,6 +1122,14 @@ export default function LandingPage() {
         .flash-down { animation: flashRed 0.7s ease-out; }
         @keyframes pulseRing { 0% { box-shadow: 0 0 0 0 rgba(245,166,35,0.35); } 100% { box-shadow: 0 0 0 10px rgba(245,166,35,0); } }
         .pulse-ring { animation: pulseRing 2s ease-out infinite; }
+        @keyframes proofSlide { 0% { opacity: 0; transform: translate3d(-18px, 10px, 0) scale(.98); } 12%, 84% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); } 100% { opacity: 0; transform: translate3d(-10px, 8px, 0) scale(.98); } }
+        .proof-popup { animation: proofSlide 5.2s cubic-bezier(.16,1,.3,1) both; }
+        @keyframes proofTimer { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+        .proof-timer { animation: proofTimer 5.2s linear both; transform-origin: left; }
+        @keyframes chatIn { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .chat-card { animation: chatIn .28s cubic-bezier(.16,1,.3,1) both; }
+        @keyframes testimonialFloat { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .testimonial-popup { animation: testimonialFloat .42s cubic-bezier(.16,1,.3,1) both; }
       `}</style>
 
       {/* Ambient background grid + glow */}
@@ -694,6 +1165,9 @@ export default function LandingPage() {
             </a>
             <a className="transition hover:text-white" href="#features">
               Features
+            </a>
+            <a className="transition hover:text-white" href="#testimonials">
+              Testimonials
             </a>
             <a className="transition hover:text-white" href="#faq">
               FAQ
@@ -734,6 +1208,7 @@ export default function LandingPage() {
                 ["Plans", "/plans"],
                 ["Markets", "#markets"],
                 ["Features", "#features"],
+                ["Testimonials", "#testimonials"],
                 ["FAQ", "#faq"],
               ].map(([label, href]) => (
                 <a
@@ -881,7 +1356,9 @@ export default function LandingPage() {
                         : "text-white"
                   }`}
                 >
-                  ${fmt(livePrice)}
+                  {pair.live && !bitcoinMarket
+                    ? "Loading live BTC..."
+                    : formatCurrency(livePrice)}
                 </span>
                 <span
                   className={`flex items-center gap-1 rounded-md px-2 py-1 font-mono text-xs font-semibold ${
@@ -899,7 +1376,11 @@ export default function LandingPage() {
                 </span>
                 <span className="ml-auto flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-white/35">
                   <Activity className="h-3 w-3 text-[#16C784]" />
-                  Live
+                  {pair.live
+                    ? bitcoinMarketStatus === "live"
+                      ? "Live market"
+                      : "Updating"
+                    : "Simulated"}
                 </span>
               </div>
 
@@ -1007,7 +1488,10 @@ export default function LandingPage() {
               {marketSeries.map((p, idx) => {
                 const last = p.data[p.data.length - 1].price;
                 const first = p.data[0].price;
-                const pct = ((last - first) / first) * 100;
+                const pct =
+                  p.live && typeof bitcoinMarket?.change24h === "number"
+                    ? bitcoinMarket.change24h
+                    : ((last - first) / first) * 100;
                 const up = pct >= 0;
                 return (
                   <button
@@ -1046,7 +1530,11 @@ export default function LandingPage() {
                 </p>
               </div>
               <p className="font-mono text-2xl font-semibold text-white">
-                ${fmt(activeSeries.data[activeSeries.data.length - 1].price)}
+                {activeSeries.live && bitcoinMarket?.priceUsd
+                  ? formatCurrency(bitcoinMarket.priceUsd)
+                  : formatCurrency(
+                      activeSeries.data[activeSeries.data.length - 1].price,
+                    )}
               </p>
             </div>
             <div style={{ height: 300 }}>
@@ -1182,6 +1670,67 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Testimonials */}
+      <section
+        id="testimonials"
+        className="border-y border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.018)] px-5 py-20"
+      >
+        <div className="mx-auto max-w-7xl">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="fade-up text-xs font-medium uppercase tracking-[0.28em] text-[#F5A623]">
+                Testimonials
+              </p>
+              <h2
+                className="fade-up font-display mt-4 max-w-2xl text-3xl font-bold leading-tight text-white sm:text-4xl"
+                style={{ animationDelay: "0.08s" }}
+              >
+                What verified clients are saying.
+              </h2>
+            </div>
+            <a
+              className="inline-flex rounded-md border border-[rgba(245,166,35,0.28)] px-5 py-3 text-sm font-semibold text-[#F5A623] transition hover:bg-[rgba(245,166,35,0.1)]"
+              href="/register"
+            >
+              Join them
+            </a>
+          </div>
+
+          <div className="mt-10 grid gap-4 md:grid-cols-3">
+            {testimonials.map((testimonial, index) => (
+              <article
+                className="fade-up flex min-h-[280px] flex-col rounded-[10px] border border-[rgba(255,255,255,0.08)] bg-[#08080d] p-6 transition hover:border-[rgba(245,166,35,0.3)]"
+                key={testimonial.name}
+                style={{ animationDelay: `${0.08 * index}s` }}
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <span
+                    aria-label={testimonial.name}
+                    className="h-14 w-14 shrink-0 rounded-full bg-cover bg-center ring-2 ring-[rgba(245,166,35,0.24)]"
+                    role="img"
+                    style={{ backgroundImage: `url(${testimonial.photo})` }}
+                  />
+                  <span className="rounded-full bg-[rgba(22,199,132,0.12)] px-3 py-1 font-mono text-[11px] font-semibold text-[#16C784]">
+                    {testimonial.result}
+                  </span>
+                </div>
+                <p className="mt-6 text-sm leading-7 text-white/58">
+                  "{testimonial.quote}"
+                </p>
+                <div className="mt-auto pt-6">
+                  <p className="font-display text-base font-bold text-white">
+                    {testimonial.name}
+                  </p>
+                  <p className="mt-1 text-xs text-white/38">
+                    {testimonial.location} - {testimonial.role}
+                  </p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* FAQ */}
       <section id="faq" className="px-5 pb-24">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.82fr_1.18fr]">
@@ -1247,6 +1796,17 @@ export default function LandingPage() {
 
       {/* Footer */}
       <PublicFooter />
+      <PublicProofPopup
+        item={publicProofItems[proofIndex % publicProofItems.length]}
+        key={proofIndex}
+      />
+      {showTestimonialPopup ? (
+        <TestimonialPopup
+          onClose={() => setShowTestimonialPopup(false)}
+          testimonial={testimonials[testimonialIndex % testimonials.length]}
+        />
+      ) : null}
+      <PublicChatAssistant />
     </main>
   );
 }
