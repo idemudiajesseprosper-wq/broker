@@ -100,3 +100,22 @@ export async function notifySmartsuppSignup(user) {
     method: "POST",
   });
 }
+
+export async function notifySmartsuppChatStart({
+  message,
+  pageUrl,
+  visitorId,
+}) {
+  return smartsuppRequest("/conversations", {
+    body: JSON.stringify({
+      ext_id: `website-chat-${visitorId}`,
+      text: message,
+      variables: {
+        Event: "Website chat started",
+        Page_url: pageUrl,
+        Visitor_ID: visitorId,
+      },
+    }),
+    method: "POST",
+  });
+}

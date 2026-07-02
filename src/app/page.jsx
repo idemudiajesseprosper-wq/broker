@@ -5,8 +5,8 @@ import {
   ArrowDownRight,
   ArrowUpRight,
   BellRing,
-  Bot,
   ChevronDown,
+  ChevronsUp,
   CircleHelp,
   CreditCard,
   LayoutDashboard,
@@ -14,7 +14,6 @@ import {
   Mail,
   Menu,
   ReceiptText,
-  Send,
   ShieldCheck,
   Smartphone,
   Timer,
@@ -318,23 +317,6 @@ const publicProofItems = [
     color: "#38BDF8",
   },
 ];
-
-const chatPrompts = [
-  "How do I create an account?",
-  "How do deposits work?",
-  "I need help with withdrawals",
-];
-
-const chatAnswers = {
-  "How do I create an account?":
-    "Creating an account is simple. Open the registration form, enter your correct details, confirm your access credentials, then complete verification when your dashboard asks for it.",
-  "How do deposits work?":
-    "To deposit, sign in to your dashboard, open Deposit, enter the amount you want to fund, and follow the payment instructions shown there. Your deposit request stays visible in your transaction history.",
-  "I need help with withdrawals":
-    "For withdrawals, sign in, open Withdraw, enter your payout details, and submit the request. The team reviews the request and you can track the status from your dashboard.",
-  default:
-    "I can help with registration, deposits, withdrawals, investment plans, account security, and dashboard questions. Tell me what you need and I will guide you step by step.",
-};
 
 const testimonials = [
   {
@@ -755,57 +737,37 @@ function PublicProofPopup({ item }) {
   );
 }
 
-function answerQuestion(question) {
-  const normalized = question.toLowerCase();
-
-  if (chatAnswers[question]) return chatAnswers[question];
-  if (normalized.includes("deposit") || normalized.includes("fund")) {
-    return chatAnswers["How do deposits work?"];
-  }
-  if (normalized.includes("withdraw") || normalized.includes("cash")) {
-    return chatAnswers["I need help with withdrawals"];
-  }
-  if (
-    normalized.includes("register") ||
-    normalized.includes("account") ||
-    normalized.includes("sign up")
-  ) {
-    return chatAnswers["How do I create an account?"];
-  }
-  if (normalized.includes("plan") || normalized.includes("invest")) {
-    return "Investment plans are shown on the Plans page and inside your dashboard after signup. Choose a plan, review its terms, fund your wallet, and subscribe from the dashboard.";
-  }
-  if (normalized.includes("secure") || normalized.includes("safe")) {
-    return "Your account uses protected sessions, identity-aware workflows, and transaction records. Keep your login details private and use accurate profile information for smoother reviews.";
-  }
-  if (normalized.includes("support") || normalized.includes("chat")) {
-    return "You are chatting with the BSX AI assistant now. Share the issue you need help with, and I will guide you with the next best step.";
-  }
-
-  return chatAnswers.default;
-}
-
 function PublicChatAssistant() {
   const [isOpen, setIsOpen] = useState(true);
-  const [messages, setMessages] = useState([
-    {
-      from: "assistant",
-      text: "Welcome. I am the BSX AI assistant. Ask me about registration, deposits, withdrawals, plans, or account support.",
-    },
-  ]);
-  const [draft, setDraft] = useState("");
+  const [startingChat, setStartingChat] = useState(false);
 
-  const sendQuestion = (question) => {
-    const cleanQuestion = question.trim();
-    if (!cleanQuestion) return;
+  const supportMessage =
+    "Welcome 👋 Whether you have a specific question or need assistance, we're here for you. 😉 What would you like to know?";
 
-    setMessages((current) => [
-      ...current,
-      { from: "user", text: cleanQuestion },
-      { from: "assistant", text: answerQuestion(cleanQuestion) },
-    ]);
-    setDraft("");
-    setIsOpen(true);
+  const openSmartsuppChat = async () => {
+    setStartingChat(true);
+
+    try {
+      await fetch("/api/support/chat-start", {
+        body: JSON.stringify({
+          message: supportMessage,
+          pageUrl: window.location.href,
+        }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      });
+    } catch (error) {
+      console.error("Unable to record support chat request:", error);
+    } finally {
+      setStartingChat(false);
+    }
+
+    if (
+      typeof window !== "undefined" &&
+      typeof window.smartsupp === "function"
+    ) {
+      window.smartsupp("chat:open");
+    }
   };
 
   return (
@@ -814,10 +776,10 @@ function PublicChatAssistant() {
         <div className="chat-card w-[min(380px,calc(100vw-32px))] rounded-[14px] border border-white/10 bg-white p-4 text-[#171717] shadow-[0_24px_70px_rgba(0,0,0,0.35)]">
           <div className="flex items-start justify-between gap-4">
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#F1F5F9] text-[#94A3B8]">
-              <Bot aria-hidden="true" className="h-6 w-6" />
+              <CircleHelp aria-hidden="true" className="h-6 w-6" />
             </span>
             <button
-              aria-label="Close chat assistant"
+              aria-label="Close chat box"
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
               onClick={() => setIsOpen(false)}
               type="button"
@@ -826,73 +788,21 @@ function PublicChatAssistant() {
             </button>
           </div>
           <p className="mt-4 text-[15px] leading-6 text-slate-700">
-            Welcome! Whether you have a specific question or need assistance, we
-            are here for you. What would you like to know?
+            {supportMessage}
           </p>
-          <div className="mt-4 max-h-56 space-y-3 overflow-y-auto rounded-md bg-slate-50 p-3">
-            {messages.map((message, index) => (
-              <div
-                className={`flex ${message.from === "user" ? "justify-end" : "justify-start"}`}
-                key={`${message.from}-${index}-${message.text}`}
-              >
-                <p
-                  className={`max-w-[88%] rounded-md px-3 py-2 text-xs leading-5 ${
-                    message.from === "user"
-                      ? "bg-[#2445E8] text-white"
-                      : "bg-white text-slate-700 shadow-sm"
-                  }`}
-                >
-                  {message.text}
-                </p>
-              </div>
-            ))}
-          </div>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {chatPrompts.map((prompt) => (
-              <button
-                className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-200 hover:text-slate-900"
-                key={prompt}
-                onClick={() => sendQuestion(prompt)}
-                type="button"
-              >
-                {prompt}
-              </button>
-            ))}
-          </div>
-          <form
-            className="mt-4 flex gap-2"
-            onSubmit={(event) => {
-              event.preventDefault();
-              sendQuestion(draft);
-            }}
-          >
-            <input
-              aria-label="Ask the AI assistant"
-              className="min-w-0 flex-1 rounded-full border border-slate-200 px-4 py-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#2445E8]"
-              onChange={(event) => setDraft(event.target.value)}
-              placeholder="Type your question..."
-              value={draft}
-            />
-            <button
-              aria-label="Send message"
-              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#2445E8] text-white transition hover:bg-[#1D39C4]"
-              type="submit"
-            >
-              <Send aria-hidden="true" className="h-4 w-4" />
-            </button>
-          </form>
           <button
             className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#2445E8] px-5 text-sm font-semibold text-white transition hover:bg-[#1D39C4]"
-            onClick={() => sendQuestion("I want to start a chat with support")}
+            disabled={startingChat}
+            onClick={openSmartsuppChat}
             type="button"
           >
             <Mail aria-hidden="true" className="h-4 w-4" />
-            Let's chat
+            {startingChat ? "Starting chat..." : "Let's chat"}
           </button>
         </div>
       ) : null}
       <button
-        aria-label={isOpen ? "Chat assistant is open" : "Open chat assistant"}
+        aria-label={isOpen ? "Chat box is open" : "Open chat box"}
         className="relative mt-3 flex h-14 w-14 items-center justify-center rounded-full bg-[#2445E8] text-white shadow-[0_16px_45px_rgba(36,69,232,0.42)] transition hover:bg-[#1D39C4]"
         onClick={() => setIsOpen((value) => !value)}
         type="button"
@@ -949,6 +859,35 @@ function TestimonialPopup({ testimonial, onClose }) {
         {testimonial.result}
       </p>
     </aside>
+  );
+}
+
+function BackToTopButton() {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const updateVisibility = () => {
+      setIsVisible(window.scrollY > 520);
+    };
+
+    updateVisibility();
+    window.addEventListener("scroll", updateVisibility, { passive: true });
+    return () => window.removeEventListener("scroll", updateVisibility);
+  }, []);
+
+  if (!isVisible) {
+    return null;
+  }
+
+  return (
+    <button
+      aria-label="Back to top"
+      className="fixed bottom-24 right-4 z-40 flex h-11 w-11 items-center justify-center rounded-full border border-[rgba(245,166,35,0.34)] bg-[#08080d] text-[#F5A623] shadow-[0_14px_40px_rgba(0,0,0,0.34)] transition hover:bg-[rgba(245,166,35,0.1)] sm:right-6"
+      onClick={() => window.scrollTo({ behavior: "smooth", top: 0 })}
+      type="button"
+    >
+      <ChevronsUp aria-hidden="true" className="h-5 w-5" />
+    </button>
   );
 }
 
@@ -1806,6 +1745,7 @@ export default function LandingPage() {
           testimonial={testimonials[testimonialIndex % testimonials.length]}
         />
       ) : null}
+      <BackToTopButton />
       <PublicChatAssistant />
     </main>
   );
