@@ -310,9 +310,9 @@ const publicProofItems = [
   {
     type: "withdrawal",
     label: "Withdrawal",
-    name: "Grace from Lagos",
+    name: "Sofia from Madrid",
     detail: "just withdrew",
-    amount: "$1,980",
+    amount: "$2,180",
     icon: ArrowDownRight,
     color: "#38BDF8",
   },
@@ -340,14 +340,64 @@ const testimonials = [
     result: "$3,420 withdrawn",
   },
   {
-    name: "Grace O.",
-    location: "Lagos",
-    role: "Active trader",
+    name: "Sofia R.",
+    location: "Madrid",
+    role: "Active investor",
     photo:
       "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=240&q=80",
     quote:
       "I like that everything is in one place. My account records, plan details, notifications, and support access are easy to use on mobile.",
-    result: "$1,980 withdrawn",
+    result: "$2,180 withdrawn",
+  },
+  {
+    name: "James W.",
+    location: "Manchester",
+    role: "Plan subscriber",
+    photo:
+      "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=240&q=80",
+    quote:
+      "I wanted a cleaner way to track deposits and payouts. The portal keeps the numbers, requests, and updates in one place without feeling complicated.",
+    result: "$4,760 earned",
+  },
+  {
+    name: "Emily C.",
+    location: "Toronto",
+    role: "Verified client",
+    photo:
+      "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=240&q=80",
+    quote:
+      "The account history is easy to scan, and I can follow pending withdrawals without messaging support every time I need an update.",
+    result: "$3,125 withdrawn",
+  },
+  {
+    name: "Lucas M.",
+    location: "Berlin",
+    role: "Active client",
+    photo:
+      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=240&q=80",
+    quote:
+      "I appreciate how direct the dashboard feels. Funding, plan progress, and support are all clear enough to use from my phone.",
+    result: "$6,240 earned",
+  },
+  {
+    name: "Chloe T.",
+    location: "Sydney",
+    role: "Verified investor",
+    photo:
+      "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=240&q=80",
+    quote:
+      "The deposit workflow is straightforward, and the notifications help me know when account activity has been reviewed.",
+    result: "$2,940 withdrawn",
+  },
+  {
+    name: "Hannah L.",
+    location: "Singapore",
+    role: "Portfolio client",
+    photo:
+      "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=240&q=80",
+    quote:
+      "Everything I need is visible after login. I can check my balance, submit requests, and see what has already been processed.",
+    result: "$5,310 earned",
   },
 ];
 

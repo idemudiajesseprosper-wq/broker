@@ -1,6 +1,14 @@
 "use client";
 
-import { BadgeDollarSign, Landmark, ShieldCheck, Wallet } from "lucide-react";
+import {
+  BadgeDollarSign,
+  Bitcoin,
+  CircleDollarSign,
+  Landmark,
+  Repeat2,
+  Send,
+  Wallet,
+} from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import {
   DashboardCard,
@@ -16,54 +24,144 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/context/ToastContext";
 
+const withdrawalMethods = [
+  {
+    accent: "#F6BE3B",
+    fields: [
+      ["amount", "Input Amount", "Amount", "number"],
+      ["walletAddress", "Wallet Address", "Wallet Address", "text"],
+    ],
+    icon: Bitcoin,
+    label: "Bitcoin (recommended)",
+    value: "Bitcoin",
+  },
+  {
+    accent: "#E6453A",
+    fields: [
+      ["accountName", "Name", "Name", "text"],
+      ["accountNumber", "Account number", "Account Number", "text"],
+      ["bankName", "Bank", "Bank", "text"],
+      ["amount", "Amount", "Input Amount", "number"],
+    ],
+    icon: Repeat2,
+    label: "Transfer",
+    value: "Transfer",
+  },
+  {
+    accent: "#38BDF8",
+    fields: [
+      ["accountName", "Account Name", "Name", "text"],
+      ["accountNumber", "Account number", "Account Number", "text"],
+      ["address", "Address", "Address", "text"],
+      ["bankName", "Bank Name", "Bank Name", "text"],
+      ["routingNumber", "Routine number", "Routine Number", "text"],
+      ["amount", "Amount", "Amount", "number"],
+    ],
+    icon: Landmark,
+    label: "Wire Transfer",
+    value: "Wire Transfer",
+  },
+  {
+    accent: "#6D4BC3",
+    fields: [["amount", "Input Amount", "Amount", "number"]],
+    icon: Wallet,
+    label: "Skrill",
+    value: "Skrill",
+  },
+  {
+    accent: "#F6D21F",
+    fields: [["amount", "Input Amount", "Amount", "number"]],
+    icon: Send,
+    label: "Western Union",
+    value: "Western Union",
+  },
+  {
+    accent: "#1D62C9",
+    fields: [
+      ["walletAddress", "Email Address", "Email Address", "email"],
+      ["amount", "Input Amount", "Amount", "number"],
+    ],
+    icon: CircleDollarSign,
+    label: "Paypal",
+    value: "Paypal",
+  },
+  {
+    accent: "#7B3FF2",
+    fields: [
+      ["walletAddress", "Email Address", "Email Address", "email"],
+      ["amount", "Input Amount", "Amount", "number"],
+    ],
+    icon: CircleDollarSign,
+    label: "Zelle",
+    value: "Zelle",
+  },
+  {
+    accent: "#22C55E",
+    fields: [
+      ["walletAddress", "Cash App Tag", "Cash App Tag", "text"],
+      ["amount", "Input Amount", "Amount", "number"],
+    ],
+    icon: CircleDollarSign,
+    label: "Cash App",
+    value: "Cash App",
+  },
+];
+
 export default function WithdrawPage() {
   const toast = useToast();
   const [account, setAccount] = useState(null);
-  const [user, setUser] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [form, setForm] = useState({
     accountName: "",
     accountNumber: "",
+    address: "",
     amount: "",
     bankName: "",
+    routingNumber: "",
+    walletAddress: "",
+    withdrawalMethod: "",
   });
+  const [activeMethod, setActiveMethod] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
+  const loadData = useCallback(
+    async ({ silent = false } = {}) => {
+      if (!silent) {
+        setLoading(true);
+      }
 
-    try {
-      const [accountResponse, userResponse, transactionResponse] =
-        await Promise.all([
+      try {
+        const [accountResponse, transactionResponse] = await Promise.all([
           fetch("/api/account"),
-          fetch("/api/auth/me"),
           fetch("/api/transactions/history?type=withdrawal&limit=6"),
         ]);
 
-      if (!accountResponse.ok || !userResponse.ok || !transactionResponse.ok) {
-        throw new Error("Unable to load withdrawal details");
+        if (!accountResponse.ok || !transactionResponse.ok) {
+          throw new Error("Unable to load withdrawal details");
+        }
+
+        const [accountData, transactionData] = await Promise.all([
+          accountResponse.json(),
+          transactionResponse.json(),
+        ]);
+
+        setAccount(accountData.account);
+        setTransactions(transactionData.transactions || []);
+      } catch (error) {
+        toast.error("Withdrawal page unavailable", error.message);
+      } finally {
+        setLoading(false);
       }
-
-      const [accountData, userData, transactionData] = await Promise.all([
-        accountResponse.json(),
-        userResponse.json(),
-        transactionResponse.json(),
-      ]);
-
-      setAccount(accountData.account);
-      setUser(userData.user);
-      setTransactions(transactionData.transactions || []);
-    } catch (error) {
-      toast.error("Withdrawal page unavailable", error.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [toast]);
+    },
+    [toast],
+  );
 
   useEffect(() => {
     loadData();
-    const refreshTimer = window.setInterval(loadData, 30000);
+    const refreshTimer = window.setInterval(() => {
+      loadData({ silent: true });
+    }, 30000);
 
     return () => window.clearInterval(refreshTimer);
   }, [loadData]);
@@ -91,7 +189,17 @@ export default function WithdrawPage() {
       }
 
       toast.success("Withdrawal submitted", data.message);
-      setForm({ accountName: "", accountNumber: "", amount: "", bankName: "" });
+      setForm({
+        accountName: "",
+        accountNumber: "",
+        address: "",
+        amount: "",
+        bankName: "",
+        routingNumber: "",
+        walletAddress: "",
+        withdrawalMethod: "",
+      });
+      setActiveMethod("");
       await loadData();
     } catch (error) {
       toast.error("Withdrawal failed", error.message);
@@ -104,13 +212,28 @@ export default function WithdrawPage() {
     return <LoadingState label="Loading withdrawal workspace..." />;
   }
 
-  const kycApproved = user?.kycStatus === "approved";
+  function toggleMethod(method) {
+    setActiveMethod((current) => {
+      const next = current === method.value ? "" : method.value;
+      setForm(() => ({
+        accountName: "",
+        accountNumber: "",
+        address: "",
+        amount: "",
+        bankName: "",
+        routingNumber: "",
+        walletAddress: "",
+        withdrawalMethod: next,
+      }));
+      return next;
+    });
+  }
 
   return (
     <div>
       <PageHeader
-        description="Submit payout requests, track approval status, and keep your bank details accurate."
-        title="Withdraw Funds"
+        description="Select your preferred withdrawal payment option, enter your payout details, and submit for review."
+        title="Withdrawal Request"
       />
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -129,11 +252,11 @@ export default function WithdrawPage() {
           value={formatCurrency(account?.totalWithdrawn)}
         />
         <StatCard
-          accent={kycApproved ? "#4ADE80" : "#F5A623"}
-          detail={kycApproved ? "Withdrawals enabled" : "Approval required"}
-          icon={ShieldCheck}
-          label="KYC Status"
-          value={user?.kycStatus?.replaceAll("_", " ") || "pending"}
+          accent="#60A5FA"
+          detail="Balance and payout details required"
+          icon={Landmark}
+          label="Withdrawal Access"
+          value="enabled"
         />
       </div>
 
@@ -145,7 +268,7 @@ export default function WithdrawPage() {
             </span>
             <div>
               <h2 className="text-lg font-semibold text-white">
-                Request Withdrawal
+                Select withdrawal method
               </h2>
               <p className="text-sm text-white/42">
                 Minimum withdrawal is $20.
@@ -153,52 +276,74 @@ export default function WithdrawPage() {
             </div>
           </div>
 
-          {!kycApproved ? (
-            <div className="mt-6 rounded-md border border-[#F5A623]/25 bg-[#F5A623]/10 p-4 text-sm leading-6 text-[#F5A623]">
-              KYC approval is required before withdrawals can be processed.
-            </div>
-          ) : null}
+          <div className="mt-6 space-y-6">
+            {withdrawalMethods.map((method) => {
+              const Icon = method.icon;
+              const selected = activeMethod === method.value;
 
-          <form className="mt-6 space-y-4" onSubmit={handleWithdraw}>
-            <Input
-              min="20"
-              onChange={(event) => updateField("amount", event.target.value)}
-              placeholder="Amount in USD"
-              required
-              step="0.01"
-              type="number"
-              value={form.amount}
-            />
-            <Input
-              onChange={(event) => updateField("bankName", event.target.value)}
-              placeholder="Bank name"
-              required
-              value={form.bankName}
-            />
-            <Input
-              onChange={(event) =>
-                updateField("accountNumber", event.target.value)
-              }
-              placeholder="Account number"
-              required
-              value={form.accountNumber}
-            />
-            <Input
-              onChange={(event) =>
-                updateField("accountName", event.target.value)
-              }
-              placeholder="Account name"
-              required
-              value={form.accountName}
-            />
-            <Button
-              className="h-11 w-full bg-[#F5A623] text-[#050508] hover:bg-[#E8C84A]"
-              disabled={submitting || !kycApproved}
-              type="submit"
-            >
-              {submitting ? "Submitting..." : "Submit Request"}
-            </Button>
-          </form>
+              return (
+                <div
+                  className="border-b border-white/65 pb-6 last:border-b-0 last:pb-0"
+                  key={method.value}
+                >
+                  <button
+                    className={`flex min-h-20 w-full items-center justify-center gap-3 rounded-md border px-4 text-left text-lg font-medium transition ${
+                      selected
+                        ? "border-white/70 bg-[#47AEEF] text-white shadow-[0_0_0_1px_rgba(255,255,255,0.22)]"
+                        : "border-[#47AEEF]/35 bg-[#47AEEF] text-white hover:border-white/55"
+                    }`}
+                    onClick={() => toggleMethod(method)}
+                    type="button"
+                  >
+                    <span
+                      className="grid h-12 w-12 shrink-0 place-items-center rounded-md bg-white text-[#101522]"
+                      style={{ color: method.accent }}
+                    >
+                      <Icon className="h-7 w-7" />
+                    </span>
+                    <span>{method.label}</span>
+                  </button>
+
+                  {selected ? (
+                    <form className="mt-10 space-y-5" onSubmit={handleWithdraw}>
+                      {method.fields.map(
+                        ([field, label, placeholder, type]) => (
+                          <div key={`${method.value}-${field}`}>
+                            <label
+                              className="mb-3 block text-sm font-medium text-white"
+                              htmlFor={`${method.value}-${field}`}
+                            >
+                              {label}
+                            </label>
+                            <Input
+                              className="h-14 rounded-sm bg-white text-base text-[#111827] placeholder:text-[#777] focus:border-[#65B75B]"
+                              id={`${method.value}-${field}`}
+                              min={field === "amount" ? "20" : undefined}
+                              onChange={(event) =>
+                                updateField(field, event.target.value)
+                              }
+                              placeholder={placeholder}
+                              required
+                              step={field === "amount" ? "0.01" : undefined}
+                              type={type}
+                              value={form[field]}
+                            />
+                          </div>
+                        ),
+                      )}
+                      <Button
+                        className="h-14 w-full bg-[#65B75B] text-lg text-white hover:bg-[#75C86A]"
+                        disabled={submitting}
+                        type="submit"
+                      >
+                        {submitting ? "Submitting..." : "Proceed"}
+                      </Button>
+                    </form>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
         </DashboardCard>
 
         <DashboardCard>
@@ -208,10 +353,13 @@ export default function WithdrawPage() {
           <div className="mt-5 space-y-3">
             {[
               ["Submit", "Send your payout amount and bank details."],
-              ["Review", "The operations team checks balance and KYC status."],
+              [
+                "Review",
+                "The operations team checks balance and payout details.",
+              ],
               [
                 "Processing",
-                "Approved requests are processed within 24 hours.",
+                "Approved requests are sent through your selected method.",
               ],
             ].map(([title, detail], index) => (
               <div
@@ -236,7 +384,7 @@ export default function WithdrawPage() {
               <thead className="text-xs uppercase tracking-[0.16em] text-white/35">
                 <tr>
                   <th className="py-3">Amount</th>
-                  <th className="py-3">Bank</th>
+                  <th className="py-3">Method</th>
                   <th className="py-3">Status</th>
                   <th className="py-3">Date</th>
                 </tr>
@@ -248,7 +396,9 @@ export default function WithdrawPage() {
                       {formatCurrency(transaction.amount)}
                     </td>
                     <td className="py-4 text-white/50">
-                      {transaction.bankDetails?.bankName || "Bank pending"}
+                      {transaction.withdrawalMethod ||
+                        transaction.bankDetails?.bankName ||
+                        "Method pending"}
                     </td>
                     <td className="py-4">
                       <StatusBadge status={transaction.status} />

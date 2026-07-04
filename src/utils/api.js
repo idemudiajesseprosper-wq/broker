@@ -33,12 +33,14 @@ export function serverError(error) {
 
   if (
     error?.name === "MongooseServerSelectionError" ||
+    error?.name === "MongoServerSelectionError" ||
+    error?.message?.includes("getaddrinfo ENOTFOUND") ||
     error?.message?.includes("Server selection timed out")
   ) {
     return Response.json(
       {
         error:
-          "Database connection failed. Check MONGODB_URI and MongoDB Atlas Network Access.",
+          "Database connection failed. Check your internet/DNS connection, MONGODB_URI, and MongoDB Atlas Network Access.",
       },
       { status: 503 },
     );

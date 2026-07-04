@@ -2,8 +2,7 @@ import { protect } from "@root/middleware/auth";
 import { connectDB } from "@/config/db";
 import Account from "@/models/Account";
 import Transaction from "@/models/Transaction";
-import User from "@/models/User";
-import { badRequest, forbidden, serverError } from "@/utils/api";
+import { badRequest, serverError } from "@/utils/api";
 import { createNotification } from "@/utils/createNotification";
 
 export const runtime = "nodejs";
@@ -13,27 +12,54 @@ export async function POST(req) {
     await connectDB();
 
     const { userId } = protect(req);
-    const { amount, bankName, accountNumber, accountName } = await req.json();
+    const {
+      accountName,
+      accountNumber,
+      address,
+      amount,
+      bankName,
+      routingNumber,
+      walletAddress,
+      withdrawalMethod = "Transfer",
+    } = await req.json();
     const usdAmount = Number(amount);
+    const usesBankDetails = withdrawalMethod === "Transfer";
+    const usesWireDetails = withdrawalMethod === "Wire Transfer";
+    const needsDestination = [
+      "Bitcoin",
+      "Paypal",
+      "Zelle",
+      "Cash App",
+    ].includes(withdrawalMethod);
 
     if (!usdAmount || usdAmount < 20) {
       return badRequest("Minimum withdrawal is $20");
     }
 
-    if (!bankName || !accountNumber || !accountName) {
+    if (usesBankDetails && (!bankName || !accountNumber || !accountName)) {
       return badRequest(
         "Bank name, account number, and account name are required",
       );
     }
 
-    const [user, account] = await Promise.all([
-      User.findById(userId),
-      Account.findOne({ userId }),
-    ]);
-
-    if (!user || user.kycStatus !== "approved") {
-      return forbidden("KYC approval is required for withdrawals");
+    if (
+      usesWireDetails &&
+      (!accountName ||
+        !accountNumber ||
+        !address ||
+        !bankName ||
+        !routingNumber)
+    ) {
+      return badRequest(
+        "Account name, account number, address, bank name, and routine number are required",
+      );
     }
+
+    if (needsDestination && !walletAddress) {
+      return badRequest("Withdrawal destination is required");
+    }
+
+    const account = await Account.findOne({ userId });
 
     if (!account || account.balance < usdAmount) {
       return badRequest("Insufficient balance");
@@ -48,12 +74,19 @@ export async function POST(req) {
       amount: usdAmount,
       bankDetails: {
         accountName,
-        accountNumber,
-        bankName,
+        accountNumber:
+          usesBankDetails || usesWireDetails ? accountNumber : walletAddress,
+        address,
+        bankName:
+          usesBankDetails || usesWireDetails ? bankName : withdrawalMethod,
+        routingNumber,
       },
       status: "pending",
       type: "withdrawal",
       userId,
+      walletAddress:
+        usesBankDetails || usesWireDetails ? undefined : walletAddress,
+      withdrawalMethod,
     });
 
     await createNotification(

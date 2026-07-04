@@ -45,7 +45,7 @@ const money = new Intl.NumberFormat("en-US", {
 const tabs = [
   ["overview", LayoutDashboard, "Overview"],
   ["users", Users, "Users"],
-  ["money", CircleDollarSign, "Account Actions"],
+  ["money", CircleDollarSign, "Manage Accounts"],
   ["transactions", Wallet, "Transactions"],
   ["notifications", Bell, "Notifications"],
   ["reports", Activity, "Reports"],
@@ -259,9 +259,9 @@ export default function AdminPage() {
     const parsed = moneySchema.safeParse(values);
     if (!parsed.success) {
       const error =
-        "Select a user, choose an action, enter an amount, and add a reason";
+        "Select a user, choose deposit, withdrawal, or bonus, enter an amount, and add a note";
       setMessage(error);
-      toast.error("Money action not saved", error);
+      toast.error("Account update not saved", error);
       return;
     }
 
@@ -437,6 +437,7 @@ export default function AdminPage() {
                     "Full Name",
                     "Username",
                     "Email",
+                    "Password",
                     "Phone",
                     "Country",
                     "Balance",
@@ -466,6 +467,9 @@ export default function AdminPage() {
                       <td className="px-3 py-3">{user.fullName}</td>
                       <td className="px-3 py-3">{user.username || "—"}</td>
                       <td className="px-3 py-3">{user.email}</td>
+                      <td className="px-3 py-3">
+                        <Badge tone="active">Protected</Badge>
+                      </td>
                       <td className="px-3 py-3">{user.phone}</td>
                       <td className="px-3 py-3">{user.country || "—"}</td>
                       <td className="px-3 py-3">
@@ -522,9 +526,10 @@ export default function AdminPage() {
       {active === "money" ? (
         <div className="grid gap-4 xl:grid-cols-[minmax(0,480px)_1fr]">
           <Card>
-            <h3 className="text-lg font-semibold">Manage User Balance</h3>
+            <h3 className="text-lg font-semibold">Manage Accounts</h3>
             <p className="mt-1 text-sm opacity-60">
-              Select a user, choose what to do, enter the amount, and save.
+              Choose a user, pick Deposit, Withdrawal, or Bonus, enter the
+              amount, add a short note, and save.
             </p>
             <form
               className="mt-5 grid gap-3"
@@ -532,9 +537,9 @@ export default function AdminPage() {
             >
               <UserSelect register={moneyForm.register} users={data.users} />
               <Select {...moneyForm.register("action")}>
-                <option value="deposit">Deposit into user account</option>
-                <option value="withdraw">Withdraw from user account</option>
-                <option value="bonus">Add bonus to user account</option>
+                <option value="deposit">Add deposit</option>
+                <option value="withdraw">Record withdrawal</option>
+                <option value="bonus">Add bonus</option>
               </Select>
               <Input
                 min="0"
@@ -550,11 +555,11 @@ export default function AdminPage() {
                 />
               ) : null}
               <Input
-                placeholder="Reason / note"
+                placeholder="Admin note, for example: Approved deposit"
                 {...moneyForm.register("reason")}
               />
               <Button className="mt-2" type="submit">
-                <Plus size={16} /> Save Account Change
+                <Plus size={16} /> Save Account Update
               </Button>
             </form>
           </Card>
@@ -563,12 +568,9 @@ export default function AdminPage() {
             selectedUserId={moneyUserId}
             users={data.users}
           />
-          <MoneyTable title="Deposit Management" rows={data.deposits} />
-          <MoneyTable
-            title="Withdrawal Management"
-            rows={data.withdrawals}
-            withdrawal
-          />
+          <MoneyTable title="Deposits" rows={data.deposits} />
+          <MoneyTable title="Withdrawals" rows={data.withdrawals} withdrawal />
+          <BonusTable rows={data.bonuses} />
         </div>
       ) : null}
 
@@ -828,6 +830,39 @@ function MoneyTable({ rows, title, withdrawal = false }) {
   );
 }
 
+function BonusTable({ rows }) {
+  return (
+    <Card className="overflow-x-auto xl:col-span-2">
+      <h3 className="mb-4 text-lg font-semibold">Bonuses</h3>
+      <table className="w-full min-w-[720px] text-left text-sm">
+        <thead className="border-b border-white/10 text-xs uppercase opacity-55">
+          <tr>
+            {["ID", "User", "Amount", "Bonus Type", "Reason", "Created"].map(
+              (head) => (
+                <th className="px-3 py-3" key={head}>
+                  {head}
+                </th>
+              ),
+            )}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr className="border-b border-white/5" key={row._id}>
+              <td className="px-3 py-3">{row._id.slice(-8)}</td>
+              <td className="px-3 py-3">{labelUser(row.userId)}</td>
+              <td className="px-3 py-3">{money.format(row.amount || 0)}</td>
+              <td className="px-3 py-3">{row.bonusType || "Admin bonus"}</td>
+              <td className="px-3 py-3">{row.reason || "N/A"}</td>
+              <td className="px-3 py-3">{formatDate(row.createdAt)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </Card>
+  );
+}
+
 function TransactionTable({ onProcess, rows }) {
   return (
     <table className="w-full min-w-[760px] text-left text-sm">
@@ -838,6 +873,8 @@ function TransactionTable({ onProcess, rows }) {
             "User",
             "Type",
             "Amount",
+            "Method",
+            "Proof",
             "Status",
             "Date",
             "Actions",
@@ -855,6 +892,23 @@ function TransactionTable({ onProcess, rows }) {
             <td className="px-3 py-3">{labelUser(row.userId)}</td>
             <td className="px-3 py-3 capitalize">{row.type}</td>
             <td className="px-3 py-3">{money.format(row.amount || 0)}</td>
+            <td className="px-3 py-3">
+              {row.paymentMethod || row.withdrawalMethod || "Paystack"}
+            </td>
+            <td className="px-3 py-3">
+              {row.paymentProof ? (
+                <a
+                  className="font-semibold text-[#d7ff45] underline-offset-4 hover:underline"
+                  href={row.paymentProof}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  View
+                </a>
+              ) : (
+                "N/A"
+              )}
+            </td>
             <td className="px-3 py-3">
               <Badge tone={row.status}>{row.status}</Badge>
             </td>
