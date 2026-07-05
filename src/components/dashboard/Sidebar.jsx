@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 
 const sections = [
@@ -10,7 +11,14 @@ const sections = [
       ["▦", "Overview", "/dashboard"],
       ["↓", "Deposit", "/dashboard/deposit"],
       ["↑", "Withdraw", "/dashboard/withdraw"],
-      ["⌁", "Investments", "/dashboard/investments"],
+      {
+        children: [
+          ["•", "Investment Plans", "/dashboard/investments?view=plans"],
+          ["•", "My Packages", "/dashboard/investments?view=packages"],
+        ],
+        icon: "⌁",
+        label: "Packages",
+      },
       ["▤", "Transactions", "/dashboard/transactions"],
     ],
     label: "Main",
@@ -38,7 +46,7 @@ function getKycPill(status) {
     return {
       className: "bg-[rgba(33,150,243,0.12)] text-[#64B5F6]",
       label: "KYC Pending",
-      symbol: "…",
+      symbol: "...",
     };
   }
 
@@ -51,8 +59,13 @@ function getKycPill(status) {
 
 export default function Sidebar({ mobile = false, onNavigate }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { logout, user } = useAuth();
   const kyc = getKycPill(user?.kycStatus);
+  const [packagesOpen, setPackagesOpen] = useState(
+    pathname.startsWith("/dashboard/investments"),
+  );
+  const investmentView = searchParams.get("view") || "plans";
   const wrapperClass = mobile
     ? "flex h-full flex-col bg-[#08080c] p-4"
     : "fixed left-0 top-[60px] hidden h-[calc(100vh-60px)] w-[240px] flex-col overflow-y-auto border-r border-[rgba(255,255,255,0.07)] bg-[rgba(255,255,255,0.015)] p-4 md:flex";
@@ -66,7 +79,65 @@ export default function Sidebar({ mobile = false, onNavigate }) {
               {section.label}
             </p>
             <div className="space-y-1">
-              {section.items.map(([icon, label, href]) => {
+              {section.items.map((item) => {
+                if (!Array.isArray(item)) {
+                  const isOpen =
+                    packagesOpen ||
+                    pathname.startsWith("/dashboard/investments");
+                  const isActive = pathname.startsWith(
+                    "/dashboard/investments",
+                  );
+
+                  return (
+                    <div key={item.label}>
+                      <button
+                        className={`flex w-full items-center gap-2.5 rounded-lg px-4 py-2.5 text-left text-[13px] transition ${
+                          isActive
+                            ? "border-l-2 border-[#F5A623] bg-[rgba(245,166,35,0.1)] text-[#F5A623]"
+                            : "text-white/45 hover:bg-white/[0.04] hover:text-white/75"
+                        }`}
+                        onClick={() => setPackagesOpen((value) => !value)}
+                        type="button"
+                      >
+                        <span className="w-4 text-center">{item.icon}</span>
+                        <span className="flex-1">{item.label}</span>
+                        <span className="text-[10px]">
+                          {isOpen ? "⌃" : "⌄"}
+                        </span>
+                      </button>
+                      {isOpen ? (
+                        <div className="ml-6 mt-1 space-y-1 border-l border-white/10 pl-2">
+                          {item.children.map(([icon, label, href]) => {
+                            const childUrl = new URL(href, "http://localhost");
+                            const childView =
+                              childUrl.searchParams.get("view") || "plans";
+                            const childActive =
+                              pathname === childUrl.pathname &&
+                              investmentView === childView;
+
+                            return (
+                              <Link
+                                className={`flex items-center gap-2.5 rounded-lg px-4 py-2.5 text-[13px] transition ${
+                                  childActive
+                                    ? "bg-white/[0.06] text-white"
+                                    : "text-white/38 hover:bg-white/[0.04] hover:text-white/75"
+                                }`}
+                                href={href}
+                                key={href}
+                                onClick={onNavigate}
+                              >
+                                <span className="w-4 text-center">{icon}</span>
+                                {label}
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      ) : null}
+                    </div>
+                  );
+                }
+
+                const [icon, label, href] = item;
                 const isActive =
                   href === "/dashboard"
                     ? pathname === href

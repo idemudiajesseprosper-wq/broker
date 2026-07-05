@@ -55,6 +55,9 @@ export async function POST(req) {
       if (data.action === "deposit") {
         account.totalDeposited = Number(account.totalDeposited || 0) + amount;
       }
+      if (data.action === "bonus") {
+        account.totalBonus = Number(account.totalBonus || 0) + amount;
+      }
     }
 
     await account.save();

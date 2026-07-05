@@ -13,11 +13,16 @@ export async function PUT(req, context) {
     const { id } = await context.params;
     const updates = await req.json();
     const allowedUpdates = [
+      "currencySymbol",
+      "defaultAmount",
       "description",
       "durationDays",
+      "giftBonus",
       "isActive",
       "maxAmount",
+      "maxReturn",
       "minAmount",
+      "minReturn",
       "name",
       "roiPercent",
     ];

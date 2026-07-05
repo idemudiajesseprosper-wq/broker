@@ -81,6 +81,104 @@ function StatCard({ icon, label, trend, value }) {
   );
 }
 
+function AccountOverview({ account, balanceVisible, transactions }) {
+  const approvedDeposits = transactions.filter(
+    (transaction) =>
+      transaction.type === "deposit" && transaction.status === "approved",
+  );
+  const approvedWithdrawals = transactions.filter(
+    (transaction) =>
+      transaction.type === "withdrawal" && transaction.status === "approved",
+  );
+  const lastDeposit = approvedDeposits[0]?.amount || 0;
+  const lastWithdrawal = approvedWithdrawals[0]?.amount || 0;
+  const visibleBalance = balanceVisible
+    ? formatCurrency(account.balance)
+    : "......";
+
+  return (
+    <section className="rounded-2xl border border-[rgba(245,166,35,0.18)] bg-[#071f39]/70 p-5 shadow-[0_18px_50px_rgba(0,0,0,0.18)]">
+      <h2
+        className="text-center text-base font-bold uppercase tracking-[0.16em] text-[#E8C84A]"
+        style={{ fontFamily: "var(--font-syne)" }}
+      >
+        Account Overview
+      </h2>
+      <div className="mt-5 grid gap-3 md:grid-cols-3">
+        <article className="rounded-lg border border-[#E8C84A]/25 bg-white/[0.035] p-4">
+          <p className="text-xs uppercase tracking-[0.14em] text-white/45">
+            Active Deposits
+          </p>
+          <p
+            className="mt-3 text-2xl font-bold text-white"
+            style={{ fontFamily: "var(--font-syne)" }}
+          >
+            {formatCurrency(account.totalDeposited)}
+          </p>
+          <Link
+            className="mt-4 inline-flex rounded-md bg-[#F5A623] px-4 py-2 text-xs font-semibold uppercase text-[#050508]"
+            href="/dashboard/deposit"
+          >
+            Make a deposit
+          </Link>
+        </article>
+        <article className="rounded-lg border border-[#E8C84A]/25 bg-white/[0.035] p-4">
+          <p className="text-xs uppercase tracking-[0.14em] text-white/45">
+            Your Balance
+          </p>
+          <p
+            className="mt-3 text-2xl font-bold text-white"
+            style={{ fontFamily: "var(--font-syne)" }}
+          >
+            {visibleBalance}
+          </p>
+          <Link
+            className="mt-4 inline-flex rounded-md bg-[#F5A623] px-4 py-2 text-xs font-semibold uppercase text-[#050508]"
+            href="/dashboard/withdraw"
+          >
+            Withdraw funds
+          </Link>
+        </article>
+        <article className="rounded-lg border border-[#E8C84A]/25 bg-white/[0.035] p-4">
+          <p className="text-xs uppercase tracking-[0.14em] text-white/45">
+            Added Bonus
+          </p>
+          <p
+            className="mt-3 text-2xl font-bold text-white"
+            style={{ fontFamily: "var(--font-syne)" }}
+          >
+            {formatCurrency(account.totalBonus)}
+          </p>
+          <Link
+            className="mt-4 inline-flex rounded-md bg-[#F5A623] px-4 py-2 text-xs font-semibold uppercase text-[#050508]"
+            href="/dashboard/transactions"
+          >
+            My bonuses
+          </Link>
+        </article>
+      </div>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <div className="rounded-lg border border-white/10 bg-white/[0.03] p-4">
+          <p className="text-xs uppercase tracking-[0.14em] text-white/40">
+            Last Deposit
+          </p>
+          <p className="mt-2 text-xl font-bold text-[#E8C84A]">
+            {formatCurrency(lastDeposit)}
+          </p>
+        </div>
+        <div className="rounded-lg border border-white/10 bg-white/[0.03] p-4">
+          <p className="text-xs uppercase tracking-[0.14em] text-white/40">
+            Withdrawal
+          </p>
+          <p className="mt-2 text-xl font-bold text-[#E8C84A]">
+            {formatCurrency(account.totalWithdrawn || lastWithdrawal)}
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function ActionButton({ children, disabled, href, primary }) {
   if (disabled) {
     return (
@@ -508,14 +606,33 @@ export default function DashboardPage() {
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           icon="↓"
-          label="Total Deposited"
+          label="Active Deposits"
           value={formatCurrency(account.totalDeposited)}
+        />
+        <StatCard
+          icon="$"
+          label="Your Balance"
+          value={balanceVisible ? formatCurrency(account.balance) : "......"}
+        />
+        <StatCard
+          icon="+"
+          label="Added Bonus"
+          value={formatCurrency(account.totalBonus)}
         />
         <StatCard
           icon="↑"
           label="Total Withdrawn"
           value={formatCurrency(account.totalWithdrawn)}
         />
+      </section>
+
+      <AccountOverview
+        account={account}
+        balanceVisible={balanceVisible}
+        transactions={transactions}
+      />
+
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
         <StatCard
           icon="↗"
           label="Total Profit"

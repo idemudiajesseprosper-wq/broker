@@ -41,6 +41,7 @@ const money = new Intl.NumberFormat("en-US", {
   currency: "USD",
   style: "currency",
 });
+const USERS_PER_MONEY_PAGE = 10;
 
 const tabs = [
   ["overview", LayoutDashboard, "Overview"],
@@ -156,17 +157,9 @@ export default function AdminPage() {
   const [status, setStatus] = useState("");
   const [selectedUser, setSelectedUser] = useState("");
   const [message, setMessage] = useState("");
-  const moneyForm = useForm({
-    defaultValues: {
-      action: "deposit",
-      amount: "",
-      bonusType: "Admin bonus",
-      reason: "",
-      userId: "",
-    },
-  });
-  const moneyAction = moneyForm.watch("action");
-  const moneyUserId = moneyForm.watch("userId");
+  const [moneyQuery, setMoneyQuery] = useState("");
+  const [moneyPage, setMoneyPage] = useState(1);
+  const [accountActions, setAccountActions] = useState({});
   const notificationForm = useForm({
     defaultValues: { message: "", target: "all", title: "" },
   });
@@ -203,6 +196,28 @@ export default function AdminPage() {
     });
   }, [data, query, status]);
 
+  const moneyUsers = useMemo(() => {
+    const items = data?.users || [];
+    return items.filter((user) => {
+      const search =
+        `${user.fullName} ${user.email} ${user.username}`.toLowerCase();
+      return !moneyQuery || search.includes(moneyQuery.toLowerCase());
+    });
+  }, [data, moneyQuery]);
+
+  const totalMoneyPages = Math.max(
+    1,
+    Math.ceil(moneyUsers.length / USERS_PER_MONEY_PAGE),
+  );
+  const paginatedMoneyUsers = moneyUsers.slice(
+    (moneyPage - 1) * USERS_PER_MONEY_PAGE,
+    moneyPage * USERS_PER_MONEY_PAGE,
+  );
+
+  useEffect(() => {
+    setMoneyPage((page) => Math.min(page, totalMoneyPages));
+  }, [totalMoneyPages]);
+
   async function mutate(url, options, success) {
     setMessage("");
     const response = await fetch(url, {
@@ -215,12 +230,13 @@ export default function AdminPage() {
       const error = payload.error || "Action failed";
       setMessage(error);
       toast.error("Action failed", error);
-      return;
+      return false;
     }
 
     setMessage(success);
     toast.success(success, "Admin data has been updated.");
     await load();
+    return true;
   }
 
   async function updateUser(user, patch) {
@@ -271,7 +287,7 @@ export default function AdminPage() {
       withdraw: "Withdrawal completed",
     };
 
-    await mutate(
+    const saved = await mutate(
       "/api/admin/money",
       {
         body: JSON.stringify({
@@ -285,13 +301,50 @@ export default function AdminPage() {
       },
       labels[parsed.data.action],
     );
-    moneyForm.reset({
-      action: parsed.data.action,
+
+    if (saved) {
+      setAccountActions((current) => ({
+        ...current,
+        [parsed.data.userId]: {
+          action: parsed.data.action,
+          amount: "",
+          bonusType: "Admin bonus",
+          reason: "",
+        },
+      }));
+    }
+  }
+
+  function updateAccountAction(userId, patch) {
+    setAccountActions((current) => ({
+      ...current,
+      [userId]: {
+        action: "deposit",
+        amount: "",
+        bonusType: "Admin bonus",
+        reason: "",
+        ...(current[userId] || {}),
+        ...patch,
+      },
+    }));
+  }
+
+  function updateMoneySearch(value) {
+    setMoneyQuery(value);
+    setMoneyPage(1);
+  }
+
+  async function submitAccountRow(user) {
+    const values = {
+      action: "deposit",
       amount: "",
       bonusType: "Admin bonus",
       reason: "",
-      userId: parsed.data.userId,
-    });
+      ...(accountActions[user._id] || {}),
+      userId: user._id,
+    };
+
+    await submitMoneyAction(values);
   }
 
   async function sendNotification(values) {
@@ -524,49 +577,19 @@ export default function AdminPage() {
       ) : null}
 
       {active === "money" ? (
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,480px)_1fr]">
-          <Card>
-            <h3 className="text-lg font-semibold">Manage Accounts</h3>
-            <p className="mt-1 text-sm opacity-60">
-              Choose a user, pick Deposit, Withdrawal, or Bonus, enter the
-              amount, add a short note, and save.
-            </p>
-            <form
-              className="mt-5 grid gap-3"
-              onSubmit={moneyForm.handleSubmit(submitMoneyAction)}
-            >
-              <UserSelect register={moneyForm.register} users={data.users} />
-              <Select {...moneyForm.register("action")}>
-                <option value="deposit">Add deposit</option>
-                <option value="withdraw">Record withdrawal</option>
-                <option value="bonus">Add bonus</option>
-              </Select>
-              <Input
-                min="0"
-                placeholder="Amount in USD"
-                step="0.01"
-                type="number"
-                {...moneyForm.register("amount")}
-              />
-              {moneyAction === "bonus" ? (
-                <Input
-                  placeholder="Bonus type"
-                  {...moneyForm.register("bonusType")}
-                />
-              ) : null}
-              <Input
-                placeholder="Admin note, for example: Approved deposit"
-                {...moneyForm.register("reason")}
-              />
-              <Button className="mt-2" type="submit">
-                <Plus size={16} /> Save Account Update
-              </Button>
-            </form>
-          </Card>
-          <MoneyUserSummary
+        <div className="grid gap-4">
+          <ManageAccountsTable
             accounts={data.accounts}
-            selectedUserId={moneyUserId}
-            users={data.users}
+            actions={accountActions}
+            currentPage={moneyPage}
+            onPageChange={setMoneyPage}
+            onSearch={updateMoneySearch}
+            onSubmit={submitAccountRow}
+            onUpdateAction={updateAccountAction}
+            query={moneyQuery}
+            totalPages={totalMoneyPages}
+            totalUsers={moneyUsers.length}
+            users={paginatedMoneyUsers}
           />
           <MoneyTable title="Deposits" rows={data.deposits} />
           <MoneyTable title="Withdrawals" rows={data.withdrawals} withdrawal />
@@ -709,51 +732,196 @@ function ChartCard({ data, title, type = "area" }) {
   );
 }
 
-function UserSelect({ register, users }) {
+function ManageAccountsTable({
+  accounts,
+  actions,
+  currentPage,
+  onPageChange,
+  onSearch,
+  onSubmit,
+  onUpdateAction,
+  query,
+  totalPages,
+  totalUsers,
+  users,
+}) {
   return (
-    <Select {...register("userId")}>
-      <option value="">Select user</option>
-      {users.map((user) => (
-        <option key={user._id} value={user._id}>
-          {labelUser(user)}
-        </option>
-      ))}
-    </Select>
-  );
-}
-
-function MoneyUserSummary({ accounts, selectedUserId, users }) {
-  const user = users.find((item) => item._id === selectedUserId);
-  const account = accounts.find(
-    (item) =>
-      item.userId?._id === selectedUserId || item.userId === selectedUserId,
-  );
-
-  return (
-    <Card>
-      <h3 className="text-lg font-semibold">Selected User</h3>
-      {user ? (
-        <div className="mt-5 grid gap-4">
-          <div>
-            <p className="text-sm opacity-55">Name</p>
-            <p className="mt-1 font-semibold">{labelUser(user)}</p>
-          </div>
-          <div>
-            <p className="text-sm opacity-55">Email</p>
-            <p className="mt-1 font-semibold">{user.email || "Not provided"}</p>
-          </div>
-          <div className="rounded-md border border-white/10 bg-black/20 p-4">
-            <p className="text-sm opacity-55">Current balance</p>
-            <p className="mt-2 text-3xl font-bold">
-              {money.format(account?.balance || 0)}
-            </p>
-          </div>
+    <Card className="overflow-x-auto">
+      <div className="mb-5 flex flex-col justify-between gap-3 md:flex-row md:items-end">
+        <div>
+          <h3 className="text-lg font-semibold">Manage Accounts</h3>
+          <p className="mt-1 text-sm opacity-60">
+            Edit deposits, withdrawals, and bonuses directly from the user list.
+          </p>
         </div>
-      ) : (
-        <p className="mt-5 text-sm opacity-60">
-          Choose a user to see their current balance before saving.
-        </p>
+        <div className="relative w-full md:w-80">
+          <Search className="absolute left-3 top-3 opacity-45" size={16} />
+          <Input
+            className="pl-9"
+            onChange={(event) => onSearch(event.target.value)}
+            placeholder="Search users"
+            value={query}
+          />
+        </div>
+      </div>
+
+      <table className="w-full min-w-[1180px] text-left text-sm">
+        <thead className="border-b border-white/10 text-xs uppercase opacity-55">
+          <tr>
+            {[
+              "User",
+              "Email",
+              "Balance",
+              "Deposited",
+              "Withdrawn",
+              "Bonus",
+              "Action",
+              "Amount",
+              "Note",
+              "Save",
+            ].map((head) => (
+              <th className="px-3 py-3" key={head}>
+                {head}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {users.map((user) => {
+            const account = accounts.find(
+              (item) =>
+                item.userId?._id === user._id || item.userId === user._id,
+            );
+            const action = {
+              action: "deposit",
+              amount: "",
+              bonusType: "Admin bonus",
+              reason: "",
+              ...(actions[user._id] || {}),
+            };
+
+            return (
+              <tr className="border-b border-white/5 align-top" key={user._id}>
+                <td className="px-3 py-3">
+                  <div className="flex items-center gap-3">
+                    <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#d7ff45] font-bold text-[#11140c]">
+                      {labelUser(user).charAt(0)}
+                    </div>
+                    <div>
+                      <p className="font-semibold">{labelUser(user)}</p>
+                      <p className="text-xs opacity-45">
+                        @{user.username || "user"}
+                      </p>
+                    </div>
+                  </div>
+                </td>
+                <td className="px-3 py-3">{user.email || "Not provided"}</td>
+                <td className="px-3 py-3 font-semibold">
+                  {money.format(account?.balance || 0)}
+                </td>
+                <td className="px-3 py-3">
+                  {money.format(account?.totalDeposited || 0)}
+                </td>
+                <td className="px-3 py-3">
+                  {money.format(account?.totalWithdrawn || 0)}
+                </td>
+                <td className="px-3 py-3">
+                  {money.format(account?.totalBonus || 0)}
+                </td>
+                <td className="px-3 py-3">
+                  <Select
+                    className="h-10 min-w-36"
+                    onChange={(event) =>
+                      onUpdateAction(user._id, { action: event.target.value })
+                    }
+                    value={action.action}
+                  >
+                    <option value="deposit">Add deposit</option>
+                    <option value="withdraw">Withdrawal</option>
+                    <option value="bonus">Add bonus</option>
+                  </Select>
+                  {action.action === "bonus" ? (
+                    <Input
+                      className="mt-2 h-9 min-w-36"
+                      onChange={(event) =>
+                        onUpdateAction(user._id, {
+                          bonusType: event.target.value,
+                        })
+                      }
+                      placeholder="Bonus type"
+                      value={action.bonusType}
+                    />
+                  ) : null}
+                </td>
+                <td className="px-3 py-3">
+                  <Input
+                    className="h-10 min-w-32"
+                    min="0"
+                    onChange={(event) =>
+                      onUpdateAction(user._id, { amount: event.target.value })
+                    }
+                    placeholder="0.00"
+                    step="0.01"
+                    type="number"
+                    value={action.amount}
+                  />
+                </td>
+                <td className="px-3 py-3">
+                  <Input
+                    className="h-10 min-w-56"
+                    onChange={(event) =>
+                      onUpdateAction(user._id, { reason: event.target.value })
+                    }
+                    placeholder="Admin note"
+                    value={action.reason}
+                  />
+                </td>
+                <td className="px-3 py-3">
+                  <Button
+                    className="h-10 whitespace-nowrap px-3 text-xs"
+                    onClick={() => onSubmit(user)}
+                    type="button"
+                  >
+                    <Plus size={14} /> Save
+                  </Button>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+
+      {users.length ? null : (
+        <div className="py-10 text-center text-sm opacity-55">
+          No users match your search.
+        </div>
       )}
+
+      <div className="mt-5 flex flex-col justify-between gap-3 border-t border-white/10 pt-4 text-sm md:flex-row md:items-center">
+        <p className="opacity-55">
+          Showing page {currentPage} of {totalPages} · {totalUsers} user(s)
+        </p>
+        <div className="flex items-center gap-2">
+          <Button
+            disabled={currentPage <= 1}
+            onClick={() => onPageChange((page) => Math.max(1, page - 1))}
+            type="button"
+            variant="outline"
+          >
+            Previous
+          </Button>
+          <Button
+            disabled={currentPage >= totalPages}
+            onClick={() =>
+              onPageChange((page) => Math.min(totalPages, page + 1))
+            }
+            type="button"
+            variant="outline"
+          >
+            Next
+          </Button>
+        </div>
+      </div>
     </Card>
   );
 }

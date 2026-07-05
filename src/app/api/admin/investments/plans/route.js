@@ -11,12 +11,17 @@ export async function POST(req) {
     adminOnly(req);
 
     const {
+      defaultAmount,
       name,
       description,
+      giftBonus,
+      maxReturn,
       minAmount,
+      minReturn,
       maxAmount,
       roiPercent,
       durationDays,
+      currencySymbol,
     } = await req.json();
 
     if (!name || !minAmount || !maxAmount || !roiPercent || !durationDays) {
@@ -24,10 +29,15 @@ export async function POST(req) {
     }
 
     const plan = await InvestmentPlan.create({
+      currencySymbol,
+      defaultAmount,
       description,
       durationDays,
+      giftBonus,
       maxAmount,
+      maxReturn,
       minAmount,
+      minReturn,
       name,
       roiPercent,
     });

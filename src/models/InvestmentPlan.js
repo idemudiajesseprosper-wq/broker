@@ -6,6 +6,10 @@ const investmentPlanSchema = new mongoose.Schema({
     required: true,
   },
   description: String,
+  defaultAmount: {
+    type: Number,
+    default: 0,
+  },
   minAmount: {
     type: Number,
     required: true,
@@ -17,6 +21,22 @@ const investmentPlanSchema = new mongoose.Schema({
   roiPercent: {
     type: Number,
     required: true,
+  },
+  minReturn: {
+    type: Number,
+    default: 0,
+  },
+  maxReturn: {
+    type: Number,
+    default: 0,
+  },
+  giftBonus: {
+    type: Number,
+    default: 0,
+  },
+  currencySymbol: {
+    type: String,
+    default: "£",
   },
   durationDays: {
     type: Number,

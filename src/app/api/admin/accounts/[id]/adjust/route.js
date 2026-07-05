@@ -1,6 +1,7 @@
 import { adminOnly } from "@root/middleware/adminOnly";
 import { connectDB } from "@/config/db";
 import Account from "@/models/Account";
+import Bonus from "@/models/Bonus";
 import Transaction from "@/models/Transaction";
 import { badRequest, notFound, serverError } from "@/utils/api";
 import { logAdminAction } from "@/utils/audit";
@@ -33,6 +34,9 @@ export async function PUT(req, context) {
 
     const previousBalance = account.balance;
     account.balance += type === "credit" ? adjustmentAmount : -adjustmentAmount;
+    if (type === "credit") {
+      account.totalBonus = Number(account.totalBonus || 0) + adjustmentAmount;
+    }
     await account.save();
 
     const transactionType = type === "credit" ? "bonus" : "penalty";
@@ -45,6 +49,15 @@ export async function PUT(req, context) {
       type: transactionType,
       userId: account.userId,
     });
+
+    if (type === "credit") {
+      await Bonus.create({
+        amount: adjustmentAmount,
+        bonusType: "Balance credit",
+        reason: note || "Admin balance credit",
+        userId: account.userId,
+      });
+    }
 
     await logAdminAction({
       action: "Balance Edited",

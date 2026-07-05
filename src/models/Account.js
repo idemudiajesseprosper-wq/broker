@@ -27,6 +27,10 @@ const accountSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  totalBonus: {
+    type: Number,
+    default: 0,
+  },
   btcHolding: {
     type: Number,
     default: 0,
