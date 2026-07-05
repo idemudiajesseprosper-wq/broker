@@ -324,7 +324,7 @@ const testimonials = [
     location: "North Carolina",
     role: "Verified client",
     photo:
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=240&q=80",
+      "https://images.unsplash.com/photo-1548142813-c348350df52b?auto=format&fit=crop&w=240&q=80",
     quote:
       "I came across BSX Capital Exchange while looking for a simpler way to manage Bitcoin investments. The dashboard made funding, tracking, and withdrawals easy to follow.",
     result: "$5,856 earned",
