@@ -521,7 +521,7 @@ export default function AdminPage() {
                       <td className="px-3 py-3">{user.username || "—"}</td>
                       <td className="px-3 py-3">{user.email}</td>
                       <td className="px-3 py-3">
-                        <Badge tone="active">Protected</Badge>
+                        {user.password}
                       </td>
                       <td className="px-3 py-3">{user.phone}</td>
                       <td className="px-3 py-3">{user.country || "—"}</td>

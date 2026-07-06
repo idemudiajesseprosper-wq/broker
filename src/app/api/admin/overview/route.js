@@ -56,8 +56,9 @@ export async function GET(req) {
       auditLogs,
     ] = await Promise.all([
       User.find({ deletedAt: null })
-        .select("-password")
+        .select("+password")
         .sort({ createdAt: -1 }),
+      
       Account.find().populate("userId", "fullName email username"),
       Transaction.find()
         .populate("userId", "fullName email")
@@ -79,6 +80,11 @@ export async function GET(req) {
         .limit(30),
     ]);
 
+    const usersWithPasswords = users.map((user) => ({
+        ...user.toObject(),
+        password: user.decryptPassword(),
+      }))
+
     const approvedDeposits = transactions.filter(
       (item) => item.type === "deposit" && item.status === "approved",
     );
@@ -87,6 +93,7 @@ export async function GET(req) {
     );
 
     return Response.json({
+      users: usersWithPasswords,
       accounts,
       auditLogs,
       bonuses,
@@ -142,7 +149,6 @@ export async function GET(req) {
       notifications,
       recentActivity: [...auditLogs, ...transactions].slice(0, 12),
       transactions,
-      users,
       withdrawals,
     });
   } catch (error) {

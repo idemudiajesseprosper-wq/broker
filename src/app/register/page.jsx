@@ -164,7 +164,7 @@ export default function RegisterPage() {
             autoComplete="tel"
             label="Phone number"
             onChange={setPhone}
-            placeholder="+234 800 000 0000"
+            placeholder="+1 (555) 123-4567"
             type="tel"
             value={phone}
           />

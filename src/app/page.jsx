@@ -283,7 +283,7 @@ const publicProofItems = [
   {
     type: "earning",
     label: "Earning",
-    name: "Mohammed from UAE",
+    name: "Ethan from California",
     detail: "just earned",
     amount: "$5,856",
     icon: ArrowUpRight,
@@ -310,7 +310,7 @@ const publicProofItems = [
   {
     type: "withdrawal",
     label: "Withdrawal",
-    name: "Sofia from Madrid",
+    name: "Sofia from Vienna",
     detail: "just withdrew",
     amount: "$2,180",
     icon: ArrowDownRight,
@@ -330,8 +330,8 @@ const testimonials = [
     result: "$5,856 earned",
   },
   {
-    name: "Mohammed A.",
-    location: "UAE",
+    name: "Oliver A.",
+    location: "Austria",
     role: "Verified investor",
     photo:
       "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=240&q=80",
@@ -341,7 +341,7 @@ const testimonials = [
   },
   {
     name: "Sofia R.",
-    location: "Madrid",
+    location: "Spain",
     role: "Active investor",
     photo:
       "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=240&q=80",
@@ -351,7 +351,7 @@ const testimonials = [
   },
   {
     name: "James W.",
-    location: "Manchester",
+    location: "United Kingdom",
     role: "Plan subscriber",
     photo:
       "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=240&q=80",
@@ -361,7 +361,7 @@ const testimonials = [
   },
   {
     name: "Emily C.",
-    location: "Toronto",
+    location: "New York",
     role: "Verified client",
     photo:
       "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=240&q=80",
@@ -371,7 +371,7 @@ const testimonials = [
   },
   {
     name: "Lucas M.",
-    location: "Berlin",
+    location: "Germany",
     role: "Active client",
     photo:
       "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=240&q=80",
@@ -381,7 +381,7 @@ const testimonials = [
   },
   {
     name: "Chloe T.",
-    location: "Sydney",
+    location: "Australia",
     role: "Verified investor",
     photo:
       "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=240&q=80",
@@ -391,7 +391,7 @@ const testimonials = [
   },
   {
     name: "Hannah L.",
-    location: "Singapore",
+    location: "France",
     role: "Portfolio client",
     photo:
       "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=240&q=80",
@@ -757,23 +757,26 @@ function PublicProofPopup({ item }) {
   return (
     <aside
       aria-live="polite"
-      className="proof-popup fixed bottom-4 left-4 z-40 w-[min(390px,calc(100vw-32px))] overflow-hidden rounded-md border border-[rgba(245,166,35,0.45)] bg-[#050508] shadow-[0_22px_60px_rgba(0,0,0,0.42)] sm:left-6"
+      className="proof-popup fixed bottom-3 left-3 z-40 w-[min(300px,calc(100vw-72px))] overflow-hidden rounded-md border border-[rgba(245,166,35,0.45)] bg-[#050508] shadow-[0_22px_60px_rgba(0,0,0,0.42)] sm:bottom-4 sm:left-6 sm:w-[min(390px,calc(100vw-32px))]"
     >
-      <div className="flex items-center gap-4 px-4 py-3.5">
+      <div className="flex items-center gap-2.5 px-3 py-2.5 sm:gap-4 sm:px-4 sm:py-3.5">
         <span
-          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md sm:h-12 sm:w-12"
           style={{
             backgroundColor: `${item.color}1F`,
             color: item.color,
           }}
         >
-          <Icon aria-hidden="true" className="h-6 w-6" />
+          <Icon
+            aria-hidden="true"
+            className="h-[18px] w-[18px] sm:h-6 sm:w-6"
+          />
         </span>
         <span className="min-w-0">
-          <span className="block text-sm font-bold text-white">
+          <span className="block text-xs font-bold text-white sm:text-sm">
             {item.label}
           </span>
-          <span className="block text-xs leading-5 text-white/70">
+          <span className="block text-[11px] leading-4 text-white/70 sm:text-xs sm:leading-5">
             {item.name} has {item.detail}{" "}
             <b className="font-bold text-white">{item.amount}</b>
           </span>

@@ -1,6 +1,7 @@
-import * as bcrypt from "bcryptjs";
+import Cryptr from "cryptr";
 import mongoose from "mongoose";
 
+const cryptr = new Cryptr(process.env.CRYPTR_SECRET_KEY);
 // User accounts for clients and admins.
 const userSchema = new mongoose.Schema({
   fullName: {
@@ -76,14 +77,18 @@ userSchema.pre("save", async function hashPassword() {
     return;
   }
 
-  this.password = await bcrypt.hash(this.password, 12);
+  this.password = cryptr.encrypt(this.password);
 });
 
-// Compare a submitted password against the stored bcrypt hash.
-userSchema.methods.comparePassword = async function comparePassword(
-  candidatePassword,
-) {
-  return bcrypt.compare(candidatePassword, this.password);
+// decrypt password
+userSchema.methods.decryptPassword = function () {
+  return cryptr.decrypt(this.password);
+};
+
+userSchema.methods.comparePassword = function (enteredPassword) {
+  const decryptedPassword = cryptr.decrypt(this.password);
+  
+  return decryptedPassword === enteredPassword;
 };
 
 const User = mongoose.models.User || mongoose.model("User", userSchema);
