@@ -7,7 +7,7 @@ export default function SmartsuppWidget() {
     return null;
   }
 
-  const orientation = process.env.NEXT_PUBLIC_SMARTSUPP_ORIENTATION || "left";
+  const orientation = process.env.NEXT_PUBLIC_SMARTSUPP_ORIENTATION || "right";
 
   return (
     <>
@@ -16,6 +16,7 @@ export default function SmartsuppWidget() {
           var _smartsupp = window._smartsupp || {};
           _smartsupp.key = ${JSON.stringify(smartsuppKey)};
           _smartsupp.orientation = ${JSON.stringify(orientation)};
+          _smartsupp.hideWidget = true;
           window._smartsupp = _smartsupp;
         `}
       </Script>

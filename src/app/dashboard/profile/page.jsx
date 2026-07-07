@@ -1,6 +1,6 @@
 "use client";
 
-import { BadgeCheck, Mail, ShieldCheck, UserRound, Wallet } from "lucide-react";
+import { BadgeCheck, Mail, UserRound, Wallet } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import {
   DashboardCard,
@@ -9,7 +9,6 @@ import {
   LoadingState,
   PageHeader,
   StatCard,
-  StatusBadge,
 } from "@/components/dashboard/DashboardPageKit";
 import { useToast } from "@/context/ToastContext";
 
@@ -60,11 +59,11 @@ export default function ProfilePage() {
   return (
     <div>
       <PageHeader
-        description="Review your identity, wallet profile, verification status, and account health."
+        description="Review your wallet profile, contact details, and account health."
         title="Profile"
       />
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2">
         <StatCard
           accent="#F5A623"
           detail={account?.accountNumber || "Wallet pending"}
@@ -78,13 +77,6 @@ export default function ProfilePage() {
           icon={BadgeCheck}
           label="Email Status"
           value={user?.isVerified ? "Verified" : "Unverified"}
-        />
-        <StatCard
-          accent="#60A5FA"
-          detail="Identity review status"
-          icon={ShieldCheck}
-          label="KYC"
-          value={user?.kycStatus?.replaceAll("_", " ") || "not submitted"}
         />
       </div>
 
@@ -149,19 +141,6 @@ export default function ProfilePage() {
                 <p className="mt-2 text-lg font-semibold text-white">{value}</p>
               </div>
             ))}
-          </div>
-          <div className="mt-5 rounded-md border border-[#F5A623]/20 bg-[#F5A623]/10 p-4">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-sm font-semibold text-white">
-                Verification summary
-              </p>
-              <StatusBadge status={user?.kycStatus || "not_submitted"} />
-            </div>
-            <p className="mt-2 text-sm leading-6 text-white/48">
-              Keep your identity and contact details accurate. Withdrawals and
-              investment subscriptions may require approved KYC before they can
-              be completed.
-            </p>
           </div>
         </DashboardCard>
       </div>

@@ -824,27 +824,30 @@ function PublicChatAssistant() {
   };
 
   return (
-    <section className="fixed bottom-4 right-4 z-50 sm:right-6">
+    <section className="fixed bottom-3 right-3 z-50 sm:bottom-4 sm:right-6">
       {isOpen ? (
-        <div className="chat-card w-[min(380px,calc(100vw-32px))] rounded-[14px] border border-white/10 bg-white p-4 text-[#171717] shadow-[0_24px_70px_rgba(0,0,0,0.35)]">
-          <div className="flex items-start justify-between gap-4">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#F1F5F9] text-[#94A3B8]">
-              <CircleHelp aria-hidden="true" className="h-6 w-6" />
+        <div className="chat-card w-[min(300px,calc(100vw-24px))] rounded-[12px] border border-white/10 bg-white p-3 text-[#171717] shadow-[0_20px_54px_rgba(0,0,0,0.3)] sm:w-[min(380px,calc(100vw-32px))] sm:rounded-[14px] sm:p-4 sm:shadow-[0_24px_70px_rgba(0,0,0,0.35)]">
+          <div className="flex items-start justify-between gap-3 sm:gap-4">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F1F5F9] text-[#94A3B8] sm:h-11 sm:w-11">
+              <CircleHelp
+                aria-hidden="true"
+                className="h-5 w-5 sm:h-6 sm:w-6"
+              />
             </span>
             <button
               aria-label="Close chat box"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 sm:h-9 sm:w-9"
               onClick={() => setIsOpen(false)}
               type="button"
             >
-              <X className="h-5 w-5" />
+              <X className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
           </div>
-          <p className="mt-4 text-[15px] leading-6 text-slate-700">
+          <p className="mt-3 text-[13px] leading-5 text-slate-700 sm:mt-4 sm:text-[15px] sm:leading-6">
             {supportMessage}
           </p>
           <button
-            className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#2445E8] px-5 text-sm font-semibold text-white transition hover:bg-[#1D39C4]"
+            className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-full bg-[#2445E8] px-4 text-sm font-semibold text-white transition hover:bg-[#1D39C4] sm:h-11 sm:px-5"
             disabled={startingChat}
             onClick={openSmartsuppChat}
             type="button"
@@ -856,14 +859,14 @@ function PublicChatAssistant() {
       ) : null}
       <button
         aria-label={isOpen ? "Chat box is open" : "Open chat box"}
-        className="relative mt-3 flex h-14 w-14 items-center justify-center rounded-full bg-[#2445E8] text-white shadow-[0_16px_45px_rgba(36,69,232,0.42)] transition hover:bg-[#1D39C4]"
+        className="relative mt-2 flex h-12 w-12 items-center justify-center rounded-full bg-[#2445E8] text-white shadow-[0_16px_45px_rgba(36,69,232,0.42)] transition hover:bg-[#1D39C4] sm:mt-3 sm:h-14 sm:w-14"
         onClick={() => setIsOpen((value) => !value)}
         type="button"
       >
         {isOpen ? (
-          <X className="h-6 w-6" />
+          <X className="h-5 w-5 sm:h-6 sm:w-6" />
         ) : (
-          <CircleHelp className="h-7 w-7" />
+          <CircleHelp className="h-6 w-6 sm:h-7 sm:w-7" />
         )}
         <span className="absolute -right-0.5 top-0 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#EA3943] px-1 text-[10px] font-bold text-white">
           1
@@ -875,12 +878,12 @@ function PublicChatAssistant() {
 
 function TestimonialPopup({ testimonial, onClose }) {
   return (
-    <aside className="testimonial-popup fixed bottom-[92px] left-4 z-40 w-[min(390px,calc(100vw-32px))] rounded-[10px] border border-[rgba(255,255,255,0.12)] bg-[#08080d] p-4 shadow-[0_22px_60px_rgba(0,0,0,0.42)] sm:left-6">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex min-w-0 items-center gap-3">
+    <aside className="testimonial-popup fixed bottom-[76px] left-3 z-40 w-[min(300px,calc(100vw-24px))] rounded-[10px] border border-[rgba(255,255,255,0.12)] bg-[#08080d] p-3 shadow-[0_18px_48px_rgba(0,0,0,0.38)] sm:bottom-[92px] sm:left-6 sm:w-[min(390px,calc(100vw-32px))] sm:p-4 sm:shadow-[0_22px_60px_rgba(0,0,0,0.42)]">
+      <div className="flex items-start justify-between gap-3 sm:gap-4">
+        <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
           <span
             aria-label={testimonial.name}
-            className="h-12 w-12 shrink-0 rounded-full bg-cover bg-center"
+            className="h-10 w-10 shrink-0 rounded-full bg-cover bg-center sm:h-12 sm:w-12"
             role="img"
             style={{ backgroundImage: `url(${testimonial.photo})` }}
           />
@@ -888,27 +891,27 @@ function TestimonialPopup({ testimonial, onClose }) {
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#F5A623]">
               Client testimonial
             </p>
-            <h3 className="font-display mt-1 truncate text-base font-bold text-white">
+            <h3 className="font-display mt-1 truncate text-sm font-bold text-white sm:text-base">
               {testimonial.name}
             </h3>
-            <p className="text-xs text-white/42">
+            <p className="text-[11px] text-white/42 sm:text-xs">
               {testimonial.location} - {testimonial.role}
             </p>
           </div>
         </div>
         <button
           aria-label="Close testimonial popup"
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/10 text-white/50 transition hover:border-white/20 hover:text-white"
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/10 text-white/50 transition hover:border-white/20 hover:text-white sm:h-8 sm:w-8"
           onClick={onClose}
           type="button"
         >
           <X className="h-4 w-4" />
         </button>
       </div>
-      <p className="mt-3 text-sm leading-6 text-white/68">
+      <p className="mt-2 text-xs leading-5 text-white/68 sm:mt-3 sm:text-sm sm:leading-6">
         "{testimonial.quote}"
       </p>
-      <p className="mt-3 font-mono text-xs font-semibold text-[#16C784]">
+      <p className="mt-2 font-mono text-[11px] font-semibold text-[#16C784] sm:mt-3 sm:text-xs">
         {testimonial.result}
       </p>
     </aside>

@@ -25,6 +25,7 @@ export async function POST(req) {
     const usdAmount = Number(amount);
     const usesBankDetails = withdrawalMethod === "Transfer";
     const usesWireDetails = withdrawalMethod === "Wire Transfer";
+    const usesZelleDetails = withdrawalMethod === "Zelle";
     const needsDestination = [
       "Bitcoin",
       "Paypal",
@@ -59,6 +60,10 @@ export async function POST(req) {
       return badRequest("Withdrawal destination is required");
     }
 
+    if (usesZelleDetails && !accountNumber) {
+      return badRequest("Zelle phone number is required");
+    }
+
     const account = await Account.findOne({ userId });
 
     if (!account || account.balance < usdAmount) {
@@ -75,7 +80,9 @@ export async function POST(req) {
       bankDetails: {
         accountName,
         accountNumber:
-          usesBankDetails || usesWireDetails ? accountNumber : walletAddress,
+          usesBankDetails || usesWireDetails || usesZelleDetails
+            ? accountNumber
+            : walletAddress,
         address,
         bankName:
           usesBankDetails || usesWireDetails ? bankName : withdrawalMethod,

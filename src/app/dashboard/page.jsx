@@ -369,34 +369,6 @@ function TransactionRow({ transaction }) {
   );
 }
 
-function KycBanner({ status }) {
-  if (status === "approved") {
-    return null;
-  }
-
-  return (
-    <section className="rounded-2xl border border-[rgba(245,166,35,0.2)] bg-[rgba(245,166,35,0.07)] p-5 sm:flex sm:items-center sm:justify-between">
-      <div className="flex gap-4">
-        <span className="text-xl text-[#F5A623]">⚠</span>
-        <div>
-          <p className="font-medium text-white">
-            Complete identity verification to unlock withdrawals
-          </p>
-          <p className="mt-1 text-sm text-white/45">
-            Submit your KYC documents. It takes under 2 minutes.
-          </p>
-        </div>
-      </div>
-      <Link
-        className="mt-4 inline-flex rounded-md bg-[#F5A623] px-4 py-2 text-sm font-semibold text-[#050508] sm:mt-0"
-        href="/dashboard/kyc"
-      >
-        Verify identity →
-      </Link>
-    </section>
-  );
-}
-
 export default function DashboardPage() {
   const { user } = useAuth();
   const toast = useToast();
@@ -593,8 +565,6 @@ export default function DashboardPage() {
         </div>
         <StatusBadge status={account.status} />
       </section>
-
-      <KycBanner status={user?.kycStatus} />
 
       <BalanceCard
         account={account}

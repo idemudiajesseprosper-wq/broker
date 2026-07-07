@@ -17,7 +17,6 @@ import { useToast } from "@/context/ToastContext";
 const notificationTypes = {
   deposit: "Deposit",
   investment: "Investment",
-  kyc: "KYC",
   system: "System",
   withdrawal: "Withdrawal",
 };
@@ -117,7 +116,7 @@ export default function NotificationsPage() {
   return (
     <div>
       <PageHeader
-        description="Stay current on deposits, withdrawals, investments, KYC reviews, and system updates."
+        description="Stay current on deposits, withdrawals, investments, and system updates."
         title="Notifications"
       />
 
@@ -218,7 +217,7 @@ export default function NotificationsPage() {
         ) : (
           <div className="mt-5">
             <EmptyState
-              description="Important investment, funding, KYC, and account updates will appear here."
+              description="Important investment, funding, and account updates will appear here."
               title="No notifications yet"
             />
           </div>

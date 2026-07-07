@@ -9,6 +9,7 @@ import {
   Send,
   Wallet,
 } from "lucide-react";
+import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 import {
   DashboardCard,
@@ -33,6 +34,7 @@ const withdrawalMethods = [
     ],
     icon: Bitcoin,
     label: "Bitcoin (recommended)",
+    logoUrl: "https://cdn.simpleicons.org/bitcoin/F7931A",
     value: "Bitcoin",
   },
   {
@@ -66,6 +68,7 @@ const withdrawalMethods = [
     fields: [["amount", "Input Amount", "Amount", "number"]],
     icon: Wallet,
     label: "Skrill",
+    logoUrl: "https://cdn.simpleicons.org/skrill/862165",
     value: "Skrill",
   },
   {
@@ -73,6 +76,7 @@ const withdrawalMethods = [
     fields: [["amount", "Input Amount", "Amount", "number"]],
     icon: Send,
     label: "Western Union",
+    logoUrl: "https://cdn.simpleicons.org/westernunion/111827",
     value: "Western Union",
   },
   {
@@ -83,16 +87,19 @@ const withdrawalMethods = [
     ],
     icon: CircleDollarSign,
     label: "Paypal",
+    logoUrl: "https://cdn.simpleicons.org/paypal/003087",
     value: "Paypal",
   },
   {
     accent: "#7B3FF2",
     fields: [
       ["walletAddress", "Email Address", "Email Address", "email"],
+      ["accountNumber", "Phone Number", "Phone Number", "tel"],
       ["amount", "Input Amount", "Amount", "number"],
     ],
     icon: CircleDollarSign,
     label: "Zelle",
+    logoUrl: "https://cdn.simpleicons.org/zelle/6D1ED4",
     value: "Zelle",
   },
   {
@@ -103,9 +110,25 @@ const withdrawalMethods = [
     ],
     icon: CircleDollarSign,
     label: "Cash App",
+    logoUrl: "https://cdn.simpleicons.org/cashapp/00C244",
     value: "Cash App",
   },
 ];
+
+function formatWithdrawalDestination(transaction) {
+  if (transaction.withdrawalMethod === "Zelle") {
+    return [transaction.walletAddress, transaction.bankDetails?.accountNumber]
+      .filter(Boolean)
+      .join(" / ");
+  }
+
+  return (
+    transaction.walletAddress ||
+    transaction.bankDetails?.accountNumber ||
+    transaction.bankDetails?.accountName ||
+    "Destination pending"
+  );
+}
 
 export default function WithdrawPage() {
   const toast = useToast();
@@ -299,7 +322,18 @@ export default function WithdrawPage() {
                       className="grid h-12 w-12 shrink-0 place-items-center rounded-md bg-white text-[#101522]"
                       style={{ color: method.accent }}
                     >
-                      <Icon className="h-7 w-7" />
+                      {method.logoUrl ? (
+                        <Image
+                          alt=""
+                          className="h-7 w-7 object-contain"
+                          height={28}
+                          src={method.logoUrl}
+                          unoptimized
+                          width={28}
+                        />
+                      ) : (
+                        <Icon className="h-7 w-7" />
+                      )}
                     </span>
                     <span>{method.label}</span>
                   </button>
@@ -380,11 +414,12 @@ export default function WithdrawPage() {
         <h2 className="text-lg font-semibold text-white">Recent Withdrawals</h2>
         {transactions.length ? (
           <div className="mt-5 overflow-x-auto">
-            <table className="w-full min-w-[620px] text-left text-sm">
+            <table className="w-full min-w-[760px] text-left text-sm">
               <thead className="text-xs uppercase tracking-[0.16em] text-white/35">
                 <tr>
                   <th className="py-3">Amount</th>
                   <th className="py-3">Method</th>
+                  <th className="py-3">Destination</th>
                   <th className="py-3">Status</th>
                   <th className="py-3">Date</th>
                 </tr>
@@ -399,6 +434,9 @@ export default function WithdrawPage() {
                       {transaction.withdrawalMethod ||
                         transaction.bankDetails?.bankName ||
                         "Method pending"}
+                    </td>
+                    <td className="py-4 text-white/50">
+                      {formatWithdrawalDestination(transaction)}
                     </td>
                     <td className="py-4">
                       <StatusBadge status={transaction.status} />
