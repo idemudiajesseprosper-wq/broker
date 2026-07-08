@@ -573,29 +573,6 @@ export default function DashboardPage() {
         setBalanceVisible={setBalanceVisible}
       />
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          icon="↓"
-          label="Active Deposits"
-          value={formatCurrency(account.totalDeposited)}
-        />
-        <StatCard
-          icon="$"
-          label="Your Balance"
-          value={balanceVisible ? formatCurrency(account.balance) : "......"}
-        />
-        <StatCard
-          icon="+"
-          label="Added Bonus"
-          value={formatCurrency(account.totalBonus)}
-        />
-        <StatCard
-          icon="↑"
-          label="Total Withdrawn"
-          value={formatCurrency(account.totalWithdrawn)}
-        />
-      </section>
-
       <AccountOverview
         account={account}
         balanceVisible={balanceVisible}

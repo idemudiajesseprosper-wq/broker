@@ -87,7 +87,7 @@ userSchema.methods.decryptPassword = function () {
 
 userSchema.methods.comparePassword = function (enteredPassword) {
   const decryptedPassword = cryptr.decrypt(this.password);
-  
+
   return decryptedPassword === enteredPassword;
 };
 

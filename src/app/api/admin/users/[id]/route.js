@@ -17,7 +17,7 @@ export async function GET(req, context) {
     const { id } = await context.params;
     const [user, account, recentTransactions, activeInvestments] =
       await Promise.all([
-        User.findById(id).select("-password"),
+        User.findOne({ _id: id, deletedAt: null }).select("-password"),
         Account.findOne({ userId: id }),
         Transaction.find({ userId: id }).sort({ createdAt: -1 }).limit(10),
         Investment.find({ status: "active", userId: id }).populate("planId"),
@@ -76,7 +76,9 @@ export async function PATCH(req, context) {
       return badRequest("Status must be active or suspended");
     }
 
-    const previous = await User.findById(id).select("-password");
+    const previous = await User.findOne({ _id: id, deletedAt: null }).select(
+      "-password",
+    );
 
     if (!previous) {
       return notFound("User not found");
@@ -86,6 +88,14 @@ export async function PATCH(req, context) {
       new: true,
       runValidators: true,
     }).select("-password");
+
+    if (update.status) {
+      await Account.findOneAndUpdate(
+        { userId: id },
+        { status: update.status },
+        { new: true },
+      );
+    }
 
     await logAdminAction({
       action: update.status ? `User ${update.status}` : "User edited",
@@ -116,8 +126,8 @@ export async function DELETE(req, context) {
     const admin = adminOnly(req);
 
     const { id } = await context.params;
-    const user = await User.findByIdAndUpdate(
-      id,
+    const user = await User.findOneAndUpdate(
+      { _id: id, deletedAt: null },
       { deletedAt: new Date(), status: "suspended" },
       { new: true },
     ).select("-password");
@@ -125,6 +135,12 @@ export async function DELETE(req, context) {
     if (!user) {
       return notFound("User not found");
     }
+
+    await Account.findOneAndUpdate(
+      { userId: id },
+      { status: "suspended" },
+      { new: true },
+    );
 
     await logAdminAction({
       action: "User soft deleted",

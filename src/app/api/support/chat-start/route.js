@@ -11,7 +11,7 @@ export async function POST(req) {
     const visitorId = crypto.randomUUID();
     const supportMessage =
       message ||
-      "Welcome 👋 Whether you have a specific question or need assistance, we're here for you. 😉 What would you like to know?";
+      "Welcome! \u{1F44B} Whether you have a specific question or need assistance, we're here for you. \u{1F609} What would you like to know?";
 
     const results = {};
 

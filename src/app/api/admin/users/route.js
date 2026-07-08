@@ -13,14 +13,17 @@ export async function GET(req) {
     const searchParams = new URL(req.url).searchParams;
     const { limit, page, skip } = getPagination(searchParams);
     const search = searchParams.get("search");
-    const query = search
-      ? {
-          $or: [
-            { email: { $regex: search, $options: "i" } },
-            { fullName: { $regex: search, $options: "i" } },
-          ],
-        }
-      : {};
+    const query = {
+      deletedAt: null,
+      ...(search
+        ? {
+            $or: [
+              { email: { $regex: search, $options: "i" } },
+              { fullName: { $regex: search, $options: "i" } },
+            ],
+          }
+        : {}),
+    };
 
     const [users, totalCount] = await Promise.all([
       User.find(query)

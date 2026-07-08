@@ -14,9 +14,11 @@ import {
   Mail,
   Menu,
   ReceiptText,
+  Send,
   ShieldCheck,
   Smartphone,
   Timer,
+  User,
   UserPlus,
   Users,
   Wallet,
@@ -795,25 +797,10 @@ function PublicChatAssistant() {
   const [startingChat, setStartingChat] = useState(false);
 
   const supportMessage =
-    "Welcome 👋 Whether you have a specific question or need assistance, we're here for you. 😉 What would you like to know?";
+    "Welcome! \u{1F44B} Whether you have a specific question or need assistance, we're here for you. \u{1F609} What would you like to know?";
 
-  const openSmartsuppChat = async () => {
+  const openSmartsuppChat = () => {
     setStartingChat(true);
-
-    try {
-      await fetch("/api/support/chat-start", {
-        body: JSON.stringify({
-          message: supportMessage,
-          pageUrl: window.location.href,
-        }),
-        headers: { "Content-Type": "application/json" },
-        method: "POST",
-      });
-    } catch (error) {
-      console.error("Unable to record support chat request:", error);
-    } finally {
-      setStartingChat(false);
-    }
 
     if (
       typeof window !== "undefined" &&
@@ -821,6 +808,21 @@ function PublicChatAssistant() {
     ) {
       window.smartsupp("chat:open");
     }
+
+    fetch("/api/support/chat-start", {
+      body: JSON.stringify({
+        message: supportMessage,
+        pageUrl: window.location.href,
+      }),
+      headers: { "Content-Type": "application/json" },
+      method: "POST",
+    })
+      .catch((error) => {
+        console.error("Unable to record support chat request:", error);
+      })
+      .finally(() => {
+        setStartingChat(false);
+      });
   };
 
   return (
@@ -829,10 +831,7 @@ function PublicChatAssistant() {
         <div className="chat-card w-[min(300px,calc(100vw-24px))] rounded-[12px] border border-white/10 bg-white p-3 text-[#171717] shadow-[0_20px_54px_rgba(0,0,0,0.3)] sm:w-[min(380px,calc(100vw-32px))] sm:rounded-[14px] sm:p-4 sm:shadow-[0_24px_70px_rgba(0,0,0,0.35)]">
           <div className="flex items-start justify-between gap-3 sm:gap-4">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F1F5F9] text-[#94A3B8] sm:h-11 sm:w-11">
-              <CircleHelp
-                aria-hidden="true"
-                className="h-5 w-5 sm:h-6 sm:w-6"
-              />
+              <User aria-hidden="true" className="h-5 w-5 sm:h-6 sm:w-6" />
             </span>
             <button
               aria-label="Close chat box"
@@ -852,7 +851,7 @@ function PublicChatAssistant() {
             onClick={openSmartsuppChat}
             type="button"
           >
-            <Mail aria-hidden="true" className="h-4 w-4" />
+            <Send aria-hidden="true" className="h-4 w-4" />
             {startingChat ? "Starting chat..." : "Let's chat"}
           </button>
         </div>
@@ -873,48 +872,6 @@ function PublicChatAssistant() {
         </span>
       </button>
     </section>
-  );
-}
-
-function TestimonialPopup({ testimonial, onClose }) {
-  return (
-    <aside className="testimonial-popup fixed bottom-[76px] left-3 z-40 w-[min(300px,calc(100vw-24px))] rounded-[10px] border border-[rgba(255,255,255,0.12)] bg-[#08080d] p-3 shadow-[0_18px_48px_rgba(0,0,0,0.38)] sm:bottom-[92px] sm:left-6 sm:w-[min(390px,calc(100vw-32px))] sm:p-4 sm:shadow-[0_22px_60px_rgba(0,0,0,0.42)]">
-      <div className="flex items-start justify-between gap-3 sm:gap-4">
-        <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
-          <span
-            aria-label={testimonial.name}
-            className="h-10 w-10 shrink-0 rounded-full bg-cover bg-center sm:h-12 sm:w-12"
-            role="img"
-            style={{ backgroundImage: `url(${testimonial.photo})` }}
-          />
-          <div className="min-w-0">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#F5A623]">
-              Client testimonial
-            </p>
-            <h3 className="font-display mt-1 truncate text-sm font-bold text-white sm:text-base">
-              {testimonial.name}
-            </h3>
-            <p className="text-[11px] text-white/42 sm:text-xs">
-              {testimonial.location} - {testimonial.role}
-            </p>
-          </div>
-        </div>
-        <button
-          aria-label="Close testimonial popup"
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/10 text-white/50 transition hover:border-white/20 hover:text-white sm:h-8 sm:w-8"
-          onClick={onClose}
-          type="button"
-        >
-          <X className="h-4 w-4" />
-        </button>
-      </div>
-      <p className="mt-2 text-xs leading-5 text-white/68 sm:mt-3 sm:text-sm sm:leading-6">
-        "{testimonial.quote}"
-      </p>
-      <p className="mt-2 font-mono text-[11px] font-semibold text-[#16C784] sm:mt-3 sm:text-xs">
-        {testimonial.result}
-      </p>
-    </aside>
   );
 }
 
@@ -1074,8 +1031,6 @@ export default function LandingPage() {
     return [...btcItems, ...baseTickerItems];
   }, [bitcoinMarket]);
   const [proofIndex, setProofIndex] = useState(0);
-  const [testimonialIndex, setTestimonialIndex] = useState(0);
-  const [showTestimonialPopup, setShowTestimonialPopup] = useState(true);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -1083,14 +1038,6 @@ export default function LandingPage() {
     }, 5200);
     return () => clearInterval(interval);
   }, []);
-
-  useEffect(() => {
-    if (!showTestimonialPopup) return;
-    const interval = setInterval(() => {
-      setTestimonialIndex((index) => (index + 1) % testimonials.length);
-    }, 7200);
-    return () => clearInterval(interval);
-  }, [showTestimonialPopup]);
 
   return (
     <main
@@ -1123,8 +1070,6 @@ export default function LandingPage() {
         .proof-timer { animation: proofTimer 5.2s linear both; transform-origin: left; }
         @keyframes chatIn { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .chat-card { animation: chatIn .28s cubic-bezier(.16,1,.3,1) both; }
-        @keyframes testimonialFloat { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        .testimonial-popup { animation: testimonialFloat .42s cubic-bezier(.16,1,.3,1) both; }
       `}</style>
 
       {/* Ambient background grid + glow */}
@@ -1795,12 +1740,6 @@ export default function LandingPage() {
         item={publicProofItems[proofIndex % publicProofItems.length]}
         key={proofIndex}
       />
-      {showTestimonialPopup ? (
-        <TestimonialPopup
-          onClose={() => setShowTestimonialPopup(false)}
-          testimonial={testimonials[testimonialIndex % testimonials.length]}
-        />
-      ) : null}
       <BackToTopButton />
       <PublicChatAssistant />
     </main>

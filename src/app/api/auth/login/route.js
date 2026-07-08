@@ -43,6 +43,13 @@ export async function POST(req) {
       );
     }
 
+    if (user.deletedAt || user.status === "suspended") {
+      return Response.json(
+        { error: "This account has been suspended. Contact support." },
+        { status: 403 },
+      );
+    }
+
     if (!user.isVerified) {
       return Response.json(
         { message: "Please verify your email first." },

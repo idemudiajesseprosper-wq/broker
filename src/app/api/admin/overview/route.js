@@ -58,7 +58,7 @@ export async function GET(req) {
       User.find({ deletedAt: null })
         .select("+password")
         .sort({ createdAt: -1 }),
-      
+
       Account.find().populate("userId", "fullName email username"),
       Transaction.find()
         .populate("userId", "fullName email")
@@ -81,9 +81,9 @@ export async function GET(req) {
     ]);
 
     const usersWithPasswords = users.map((user) => ({
-        ...user.toObject(),
-        password: user.decryptPassword(),
-      }))
+      ...user.toObject(),
+      password: user.decryptPassword(),
+    }));
 
     const approvedDeposits = transactions.filter(
       (item) => item.type === "deposit" && item.status === "approved",

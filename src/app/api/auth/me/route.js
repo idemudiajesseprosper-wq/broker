@@ -11,10 +11,10 @@ export async function GET(req) {
 
     const { userId } = protect(req);
     const user = await User.findById(userId).select(
-      "fullName email role kycStatus isVerified",
+      "deletedAt fullName email role kycStatus isVerified status",
     );
 
-    if (!user) {
+    if (!user || user.deletedAt || user.status === "suspended") {
       return unauthorized();
     }
 
