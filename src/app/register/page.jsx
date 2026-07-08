@@ -12,41 +12,7 @@ import {
 } from "@/components/AuthControls";
 import AuthShell from "@/components/AuthShell";
 import { useToast } from "@/context/ToastContext";
-
-const countries = [
-  "Argentina",
-  "Australia",
-  "Bangladesh",
-  "Brazil",
-  "Cameroon",
-  "Canada",
-  "Egypt",
-  "France",
-  "Germany",
-  "Ghana",
-  "India",
-  "Italy",
-  "Ivory Coast",
-  "Kenya",
-  "Malaysia",
-  "Mexico",
-  "Morocco",
-  "Netherlands",
-  "Other",
-  "Pakistan",
-  "Philippines",
-  "Rwanda",
-  "Saudi Arabia",
-  "Senegal",
-  "Singapore",
-  "South Africa",
-  "Spain",
-  "Tanzania",
-  "Uganda",
-  "United Arab Emirates",
-  "United Kingdom",
-  "United States",
-];
+import { COUNTRY_OPTIONS, normalizePhoneNumber } from "@/utils/phone";
 
 function getPasswordStrength(password) {
   let score = 0;
@@ -87,11 +53,27 @@ export default function RegisterPage() {
       return;
     }
 
+    const normalizedPhone = normalizePhoneNumber(phone, country);
+
+    if (!normalizedPhone) {
+      const message =
+        "Enter a valid phone number that matches the selected country.";
+      setError(message);
+      toast.error("Invalid phone number", message);
+      return;
+    }
+
     setLoading(true);
 
     try {
       const response = await fetch("/api/auth/register", {
-        body: JSON.stringify({ country, email, fullName, password, phone }),
+        body: JSON.stringify({
+          country,
+          email,
+          fullName,
+          password,
+          phone: normalizedPhone,
+        }),
         headers: { "Content-Type": "application/json" },
         method: "POST",
       });
@@ -159,22 +141,24 @@ export default function RegisterPage() {
             type="email"
             value={email}
           />
+          <SelectField label="Country" onChange={setCountry} value={country}>
+            <option value="">Select your country</option>
+            {COUNTRY_OPTIONS.map(([name]) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
+          </SelectField>
           <TextField
             autoComplete="tel"
             label="Phone number"
             onChange={setPhone}
-            placeholder="+1 (555) 123-4567"
+            placeholder={
+              country ? "Include your country code" : "Select a country first"
+            }
             type="tel"
             value={phone}
           />
-          <SelectField label="Country" onChange={setCountry} value={country}>
-            <option value="">Select your country</option>
-            {countries.map((item) => (
-              <option key={item} value={item}>
-                {item}
-              </option>
-            ))}
-          </SelectField>
           <div>
             <PasswordField
               label="Password"

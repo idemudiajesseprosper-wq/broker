@@ -17,6 +17,7 @@
     "cryptr": "^6.4.0",
     "jose": "^6.2.3",
     "jsonwebtoken": "^9.0.3",
+    "libphonenumber-js": "^1.13.8",
     "lucide-react": "^1.22.0",
     "mongoose": "^9.7.3",
     "next": "16.2.9",

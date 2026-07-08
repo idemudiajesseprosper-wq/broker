@@ -4,6 +4,7 @@ import User from "@/models/User";
 import { createAccountForUser } from "@/utils/account";
 import { serverError } from "@/utils/api";
 import { sendVerificationEmail } from "@/utils/email";
+import { normalizePhoneNumber } from "@/utils/phone";
 import { notifySmartsuppSignup } from "@/utils/smartsupp";
 
 export const runtime = "nodejs";
@@ -19,6 +20,18 @@ export async function POST(req) {
       return Response.json(
         {
           error: "Full name, email, phone, country, and password are required",
+        },
+        { status: 400 },
+      );
+    }
+
+    const normalizedPhone = normalizePhoneNumber(phone, country);
+
+    if (!normalizedPhone) {
+      return Response.json(
+        {
+          error:
+            "Enter a valid phone number that matches the selected country.",
         },
         { status: 400 },
       );
@@ -46,7 +59,7 @@ export async function POST(req) {
     user.fullName = fullName;
     user.isVerified = false;
     user.password = password;
-    user.phone = phone;
+    user.phone = normalizedPhone;
 
     await user.save();
 

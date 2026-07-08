@@ -282,45 +282,6 @@ const faqs = [
   },
 ];
 
-const publicProofItems = [
-  {
-    type: "earning",
-    label: "Earning",
-    name: "Mohammed from UAE",
-    detail: "just earned",
-    amount: "$5,856",
-    icon: ArrowUpRight,
-    color: "#16C784",
-  },
-  {
-    type: "withdrawal",
-    label: "Withdrawal",
-    name: "Ava from North Carolina",
-    detail: "just withdrew",
-    amount: "$2,430",
-    icon: Wallet,
-    color: "#F5A623",
-  },
-  {
-    type: "earning",
-    label: "Earning",
-    name: "Daniel from London",
-    detail: "just earned",
-    amount: "$7,120",
-    icon: ArrowUpRight,
-    color: "#16C784",
-  },
-  {
-    type: "withdrawal",
-    label: "Withdrawal",
-    name: "Grace from Lagos",
-    detail: "just withdrew",
-    amount: "$1,980",
-    icon: ArrowDownRight,
-    color: "#38BDF8",
-  },
-];
-
 const testimonials = [
   {
     name: "Am Aish",
@@ -750,91 +711,49 @@ function ChartTooltip({ active, payload }) {
   );
 }
 
-/* ---------------------------------------------------------------------- */
-/* Public activity and assistant widgets                                  */
-/* ---------------------------------------------------------------------- */
-
-function PublicProofPopup({ item }) {
-  const Icon = item.icon;
-
-  return (
-    <aside
-      aria-live="polite"
-      className="proof-popup fixed bottom-4 left-4 z-40 w-[min(390px,calc(100vw-32px))] overflow-hidden rounded-md border border-[rgba(245,166,35,0.45)] bg-[#050508] shadow-[0_22px_60px_rgba(0,0,0,0.42)] sm:left-6"
-    >
-      <div className="flex items-center gap-4 px-4 py-3.5">
-        <span
-          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md"
-          style={{
-            backgroundColor: `${item.color}1F`,
-            color: item.color,
-          }}
-        >
-          <Icon aria-hidden="true" className="h-6 w-6" />
-        </span>
-        <span className="min-w-0">
-          <span className="block text-sm font-bold text-white">
-            {item.label}
-          </span>
-          <span className="block text-xs leading-5 text-white/70">
-            {item.name} has {item.detail}{" "}
-            <b className="font-bold text-white">{item.amount}</b>
-          </span>
-        </span>
-      </div>
-      <span
-        className="proof-timer block h-0.5"
-        style={{ backgroundColor: item.color }}
-      />
-    </aside>
-  );
-}
-
 function PublicChatAssistant() {
   const [isOpen, setIsOpen] = useState(true);
   const [startingChat, setStartingChat] = useState(false);
 
   const supportMessage =
-    "Welcome! \u{1F44B} Whether you have a specific question or need assistance, we're here for you. \u{1F609} What would you like to know?";
+    "Welcome! Whether you have a specific question or need assistance, we're here for you. What would you like to know?";
 
   const openSmartsuppChat = () => {
     setStartingChat(true);
-    setIsOpen(false);
 
     if (
       typeof window !== "undefined" &&
       typeof window.smartsupp === "function"
     ) {
       window.smartsupp("chat:open");
-      setStartingChat(false);
-    } else {
-      setIsOpen(true);
-      setStartingChat(false);
+      setIsOpen(false);
     }
+
+    setStartingChat(false);
   };
 
   return (
-    <section className="fixed bottom-3 right-3 z-50 sm:bottom-4 sm:right-6">
+    <section className="mx-5 mb-8 sm:fixed sm:bottom-4 sm:right-6 sm:z-50 sm:m-0">
       {isOpen ? (
-        <div className="chat-card w-[min(300px,calc(100vw-24px))] rounded-[12px] border border-white/10 bg-white p-3 text-[#171717] shadow-[0_20px_54px_rgba(0,0,0,0.3)] sm:w-[min(380px,calc(100vw-32px))] sm:rounded-[14px] sm:p-4 sm:shadow-[0_24px_70px_rgba(0,0,0,0.35)]">
-          <div className="flex items-start justify-between gap-3 sm:gap-4">
+        <div className="w-full rounded-[8px] border border-white/10 bg-white p-4 text-[#171717] shadow-[0_20px_54px_rgba(0,0,0,0.3)] sm:w-[min(380px,calc(100vw-32px))]">
+          <div className="flex items-start justify-between gap-3">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F1F5F9] text-[#94A3B8] sm:h-11 sm:w-11">
               <User aria-hidden="true" className="h-5 w-5 sm:h-6 sm:w-6" />
             </span>
             <button
-              aria-label="Close chat box"
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 sm:h-9 sm:w-9"
+              aria-label="Close chat prompt"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
               onClick={() => setIsOpen(false)}
               type="button"
             >
-              <X className="h-4 w-4 sm:h-5 sm:w-5" />
+              <X className="h-4 w-4" />
             </button>
           </div>
-          <p className="mt-3 text-[13px] leading-5 text-slate-700 sm:mt-4 sm:text-[15px] sm:leading-6">
+          <p className="mt-3 text-[13px] leading-5 text-slate-700 sm:text-[15px] sm:leading-6">
             {supportMessage}
           </p>
           <button
-            className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-full bg-[#2445E8] px-4 text-sm font-semibold text-white transition hover:bg-[#1D39C4] sm:h-11 sm:px-5"
+            className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-full bg-[#2445E8] px-4 text-sm font-semibold text-white transition hover:bg-[#1D39C4] disabled:opacity-60"
             disabled={startingChat}
             onClick={openSmartsuppChat}
             type="button"
@@ -844,21 +763,16 @@ function PublicChatAssistant() {
           </button>
         </div>
       ) : null}
-      <button
-        aria-label={isOpen ? "Chat box is open" : "Open chat box"}
-        className="relative mt-2 flex h-12 w-12 items-center justify-center rounded-full bg-[#2445E8] text-white shadow-[0_16px_45px_rgba(36,69,232,0.42)] transition hover:bg-[#1D39C4] sm:mt-3 sm:h-14 sm:w-14"
-        onClick={() => setIsOpen((value) => !value)}
-        type="button"
-      >
-        {isOpen ? (
-          <X className="h-5 w-5 sm:h-6 sm:w-6" />
-        ) : (
+      {!isOpen ? (
+        <button
+          aria-label="Open chat prompt"
+          className="ml-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#2445E8] text-white shadow-[0_16px_45px_rgba(36,69,232,0.42)] transition hover:bg-[#1D39C4] sm:h-14 sm:w-14"
+          onClick={() => setIsOpen(true)}
+          type="button"
+        >
           <MessageCircle className="h-6 w-6 sm:h-7 sm:w-7" />
-        )}
-        <span className="absolute -right-0.5 top-0 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#EA3943] px-1 text-[10px] font-bold text-white">
-          1
-        </span>
-      </button>
+        </button>
+      ) : null}
     </section>
   );
 }
@@ -902,7 +816,6 @@ export default function LandingPage() {
   const [pairIdx, setPairIdx] = useState(0);
   const [bitcoinMarket, setBitcoinMarket] = useState(null);
   const [bitcoinMarketStatus, setBitcoinMarketStatus] = useState("loading");
-  const [proofIndex, setProofIndex] = useState(0);
   const pair = PAIRS[pairIdx];
   const pairBasePrice =
     pair.live && bitcoinMarket?.priceUsd ? bitcoinMarket.priceUsd : pair.start;
@@ -972,13 +885,6 @@ export default function LandingPage() {
     const t = setTimeout(() => setFlash(null), 700);
     return () => clearTimeout(t);
   }, [flash]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setProofIndex((current) => current + 1);
-    }, 6400);
-    return () => clearInterval(interval);
-  }, []);
 
   const changePct = ((livePrice - openRef.current) / openRef.current) * 100;
   const isUp = changePct >= 0;
@@ -1051,12 +957,6 @@ export default function LandingPage() {
         .flash-down { animation: flashRed 0.7s ease-out; }
         @keyframes pulseRing { 0% { box-shadow: 0 0 0 0 rgba(245,166,35,0.35); } 100% { box-shadow: 0 0 0 10px rgba(245,166,35,0); } }
         .pulse-ring { animation: pulseRing 2s ease-out infinite; }
-        @keyframes proofSlide { 0% { opacity: 0; transform: translate3d(-18px, 10px, 0) scale(.98); } 12%, 84% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); } 100% { opacity: 0; transform: translate3d(-10px, 8px, 0) scale(.98); } }
-        .proof-popup { animation: proofSlide 5.2s cubic-bezier(.16,1,.3,1) both; }
-        @keyframes proofTimer { from { transform: scaleX(1); } to { transform: scaleX(0); } }
-        .proof-timer { animation: proofTimer 5.2s linear both; transform-origin: left; }
-        @keyframes chatIn { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        .chat-card { animation: chatIn .28s cubic-bezier(.16,1,.3,1) both; }
       `}</style>
 
       {/* Ambient background grid + glow */}
@@ -1626,7 +1526,7 @@ export default function LandingPage() {
           <div className="mt-10 grid gap-4 md:grid-cols-3">
             {testimonials.map((testimonial, index) => (
               <article
-                className="fade-up flex min-h-[280px] flex-col rounded-[10px] border border-[rgba(255,255,255,0.08)] bg-[#08080d] p-6 transition hover:border-[rgba(245,166,35,0.3)]"
+                className="fade-up flex min-h-[280px] min-w-0 flex-col overflow-hidden rounded-[8px] border border-[rgba(255,255,255,0.08)] bg-[#08080d] p-5 transition hover:border-[rgba(245,166,35,0.3)] sm:p-6"
                 key={testimonial.name}
                 style={{ animationDelay: `${0.08 * index}s` }}
               >
@@ -1637,18 +1537,18 @@ export default function LandingPage() {
                     role="img"
                     style={{ backgroundImage: `url(${testimonial.photo})` }}
                   />
-                  <span className="rounded-full bg-[rgba(22,199,132,0.12)] px-3 py-1 font-mono text-[11px] font-semibold text-[#16C784]">
+                  <span className="max-w-[65%] break-words rounded-full bg-[rgba(22,199,132,0.12)] px-3 py-1 text-right font-mono text-[11px] font-semibold leading-4 text-[#16C784]">
                     {testimonial.result}
                   </span>
                 </div>
-                <p className="mt-6 text-sm leading-7 text-white/58">
+                <p className="mt-6 break-words text-sm leading-7 text-white/58">
                   "{testimonial.quote}"
                 </p>
                 <div className="mt-auto pt-6">
-                  <p className="font-display text-base font-bold text-white">
+                  <p className="font-display break-words text-base font-bold text-white">
                     {testimonial.name}
                   </p>
-                  <p className="mt-1 text-xs text-white/38">
+                  <p className="mt-1 break-words text-xs leading-5 text-white/38">
                     {testimonial.location} - {testimonial.role}
                   </p>
                 </div>
@@ -1723,10 +1623,6 @@ export default function LandingPage() {
 
       {/* Footer */}
       <PublicFooter />
-      <PublicProofPopup
-        item={publicProofItems[proofIndex % publicProofItems.length]}
-        key={proofIndex}
-      />
       <BackToTopButton />
       <PublicChatAssistant />
     </main>
