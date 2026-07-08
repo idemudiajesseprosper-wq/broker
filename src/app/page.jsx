@@ -282,6 +282,45 @@ const faqs = [
   },
 ];
 
+const publicProofItems = [
+  {
+    type: "earning",
+    label: "Earning",
+    name: "Mohammed from UAE",
+    detail: "just earned",
+    amount: "$5,856",
+    icon: ArrowUpRight,
+    color: "#16C784",
+  },
+  {
+    type: "withdrawal",
+    label: "Withdrawal",
+    name: "Ava from North Carolina",
+    detail: "just withdrew",
+    amount: "$2,430",
+    icon: Wallet,
+    color: "#F5A623",
+  },
+  {
+    type: "earning",
+    label: "Earning",
+    name: "Daniel from London",
+    detail: "just earned",
+    amount: "$7,120",
+    icon: ArrowUpRight,
+    color: "#16C784",
+  },
+  {
+    type: "withdrawal",
+    label: "Withdrawal",
+    name: "Grace from Lagos",
+    detail: "just withdrew",
+    amount: "$1,980",
+    icon: ArrowDownRight,
+    color: "#38BDF8",
+  },
+];
+
 const testimonials = [
   {
     name: "Am Aish",
@@ -715,6 +754,42 @@ function ChartTooltip({ active, payload }) {
 /* Public activity and assistant widgets                                  */
 /* ---------------------------------------------------------------------- */
 
+function PublicProofPopup({ item }) {
+  const Icon = item.icon;
+
+  return (
+    <aside
+      aria-live="polite"
+      className="proof-popup fixed bottom-4 left-4 z-40 w-[min(390px,calc(100vw-32px))] overflow-hidden rounded-md border border-[rgba(245,166,35,0.45)] bg-[#050508] shadow-[0_22px_60px_rgba(0,0,0,0.42)] sm:left-6"
+    >
+      <div className="flex items-center gap-4 px-4 py-3.5">
+        <span
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md"
+          style={{
+            backgroundColor: `${item.color}1F`,
+            color: item.color,
+          }}
+        >
+          <Icon aria-hidden="true" className="h-6 w-6" />
+        </span>
+        <span className="min-w-0">
+          <span className="block text-sm font-bold text-white">
+            {item.label}
+          </span>
+          <span className="block text-xs leading-5 text-white/70">
+            {item.name} has {item.detail}{" "}
+            <b className="font-bold text-white">{item.amount}</b>
+          </span>
+        </span>
+      </div>
+      <span
+        className="proof-timer block h-0.5"
+        style={{ backgroundColor: item.color }}
+      />
+    </aside>
+  );
+}
+
 function PublicChatAssistant() {
   const [isOpen, setIsOpen] = useState(true);
   const [startingChat, setStartingChat] = useState(false);
@@ -731,24 +806,11 @@ function PublicChatAssistant() {
       typeof window.smartsupp === "function"
     ) {
       window.smartsupp("chat:open");
+      setStartingChat(false);
     } else {
       setIsOpen(true);
+      setStartingChat(false);
     }
-
-    fetch("/api/support/chat-start", {
-      body: JSON.stringify({
-        message: supportMessage,
-        pageUrl: window.location.href,
-      }),
-      headers: { "Content-Type": "application/json" },
-      method: "POST",
-    })
-      .catch((error) => {
-        console.error("Unable to record support chat request:", error);
-      })
-      .finally(() => {
-        setStartingChat(false);
-      });
   };
 
   return (
@@ -840,6 +902,7 @@ export default function LandingPage() {
   const [pairIdx, setPairIdx] = useState(0);
   const [bitcoinMarket, setBitcoinMarket] = useState(null);
   const [bitcoinMarketStatus, setBitcoinMarketStatus] = useState("loading");
+  const [proofIndex, setProofIndex] = useState(0);
   const pair = PAIRS[pairIdx];
   const pairBasePrice =
     pair.live && bitcoinMarket?.priceUsd ? bitcoinMarket.priceUsd : pair.start;
@@ -909,6 +972,13 @@ export default function LandingPage() {
     const t = setTimeout(() => setFlash(null), 700);
     return () => clearTimeout(t);
   }, [flash]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setProofIndex((current) => current + 1);
+    }, 6400);
+    return () => clearInterval(interval);
+  }, []);
 
   const changePct = ((livePrice - openRef.current) / openRef.current) * 100;
   const isUp = changePct >= 0;
@@ -981,6 +1051,10 @@ export default function LandingPage() {
         .flash-down { animation: flashRed 0.7s ease-out; }
         @keyframes pulseRing { 0% { box-shadow: 0 0 0 0 rgba(245,166,35,0.35); } 100% { box-shadow: 0 0 0 10px rgba(245,166,35,0); } }
         .pulse-ring { animation: pulseRing 2s ease-out infinite; }
+        @keyframes proofSlide { 0% { opacity: 0; transform: translate3d(-18px, 10px, 0) scale(.98); } 12%, 84% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); } 100% { opacity: 0; transform: translate3d(-10px, 8px, 0) scale(.98); } }
+        .proof-popup { animation: proofSlide 5.2s cubic-bezier(.16,1,.3,1) both; }
+        @keyframes proofTimer { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+        .proof-timer { animation: proofTimer 5.2s linear both; transform-origin: left; }
         @keyframes chatIn { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .chat-card { animation: chatIn .28s cubic-bezier(.16,1,.3,1) both; }
       `}</style>
@@ -1649,6 +1723,10 @@ export default function LandingPage() {
 
       {/* Footer */}
       <PublicFooter />
+      <PublicProofPopup
+        item={publicProofItems[proofIndex % publicProofItems.length]}
+        key={proofIndex}
+      />
       <BackToTopButton />
       <PublicChatAssistant />
     </main>

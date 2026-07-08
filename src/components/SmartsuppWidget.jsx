@@ -28,6 +28,11 @@ export default function SmartsuppWidget() {
         src="https://www.smartsuppchat.com/loader.js"
         strategy="afterInteractive"
       />
+      <Script id="smartsupp-hide-widget" strategy="afterInteractive">
+        {`
+          window.smartsupp && window.smartsupp("widget:hide");
+        `}
+      </Script>
     </>
   );
 }
