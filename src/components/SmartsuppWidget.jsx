@@ -11,19 +11,22 @@ export default function SmartsuppWidget() {
 
   return (
     <>
-      <Script id="smartsupp-init" strategy="lazyOnload">
+      <Script id="smartsupp-init" strategy="afterInteractive">
         {`
           var _smartsupp = window._smartsupp || {};
           _smartsupp.key = ${JSON.stringify(smartsuppKey)};
           _smartsupp.orientation = ${JSON.stringify(orientation)};
           _smartsupp.hideWidget = true;
           window._smartsupp = _smartsupp;
+          window.smartsupp = window.smartsupp || function() {
+            (window.smartsupp._ = window.smartsupp._ || []).push(arguments);
+          };
         `}
       </Script>
       <Script
         id="smartsupp-loader"
         src="https://www.smartsuppchat.com/loader.js"
-        strategy="lazyOnload"
+        strategy="afterInteractive"
       />
     </>
   );
