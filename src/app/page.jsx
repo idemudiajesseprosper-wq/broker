@@ -15,11 +15,9 @@ import {
   Menu,
   MessageCircle,
   ReceiptText,
-  Send,
   ShieldCheck,
   Smartphone,
   Timer,
-  User,
   UserPlus,
   Users,
   Wallet,
@@ -712,11 +710,7 @@ function ChartTooltip({ active, payload }) {
 }
 
 function PublicChatAssistant() {
-  const [isOpen, setIsOpen] = useState(true);
   const [startingChat, setStartingChat] = useState(false);
-
-  const supportMessage =
-    "Welcome! Whether you have a specific question or need assistance, we're here for you. What would you like to know?";
 
   const openSmartsuppChat = () => {
     setStartingChat(true);
@@ -725,54 +719,25 @@ function PublicChatAssistant() {
       typeof window !== "undefined" &&
       typeof window.smartsupp === "function"
     ) {
+      window.smartsupp("widget:hide");
       window.smartsupp("chat:open");
-      setIsOpen(false);
     }
 
     setStartingChat(false);
   };
 
   return (
-    <section className="mx-5 mb-8 sm:fixed sm:bottom-4 sm:right-6 sm:z-50 sm:m-0">
-      {isOpen ? (
-        <div className="w-full rounded-[8px] border border-white/10 bg-white p-4 text-[#171717] shadow-[0_20px_54px_rgba(0,0,0,0.3)] sm:w-[min(380px,calc(100vw-32px))]">
-          <div className="flex items-start justify-between gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F1F5F9] text-[#94A3B8] sm:h-11 sm:w-11">
-              <User aria-hidden="true" className="h-5 w-5 sm:h-6 sm:w-6" />
-            </span>
-            <button
-              aria-label="Close chat prompt"
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
-              onClick={() => setIsOpen(false)}
-              type="button"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-          <p className="mt-3 text-[13px] leading-5 text-slate-700 sm:text-[15px] sm:leading-6">
-            {supportMessage}
-          </p>
-          <button
-            className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-full bg-[#2445E8] px-4 text-sm font-semibold text-white transition hover:bg-[#1D39C4] disabled:opacity-60"
-            disabled={startingChat}
-            onClick={openSmartsuppChat}
-            type="button"
-          >
-            <Send aria-hidden="true" className="h-4 w-4" />
-            {startingChat ? "Starting chat..." : "Let's chat"}
-          </button>
-        </div>
-      ) : null}
-      {!isOpen ? (
-        <button
-          aria-label="Open chat prompt"
-          className="ml-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#2445E8] text-white shadow-[0_16px_45px_rgba(36,69,232,0.42)] transition hover:bg-[#1D39C4] sm:h-14 sm:w-14"
-          onClick={() => setIsOpen(true)}
-          type="button"
-        >
-          <MessageCircle className="h-6 w-6 sm:h-7 sm:w-7" />
-        </button>
-      ) : null}
+    <section className="fixed bottom-3 right-3 z-50 sm:bottom-4 sm:right-6">
+      <button
+        aria-label="Open support chat"
+        className="flex h-12 items-center justify-center gap-2 rounded-full bg-[#2445E8] px-4 text-sm font-semibold text-white shadow-[0_16px_45px_rgba(36,69,232,0.42)] transition hover:bg-[#1D39C4] disabled:opacity-60 sm:h-14 sm:px-5"
+        disabled={startingChat}
+        onClick={openSmartsuppChat}
+        type="button"
+      >
+        <MessageCircle className="h-5 w-5" />
+        {startingChat ? "Opening..." : "Let's chat"}
+      </button>
     </section>
   );
 }
@@ -1526,7 +1491,7 @@ export default function LandingPage() {
           <div className="mt-10 grid gap-4 md:grid-cols-3">
             {testimonials.map((testimonial, index) => (
               <article
-                className="fade-up flex min-h-[280px] min-w-0 flex-col overflow-hidden rounded-[8px] border border-[rgba(255,255,255,0.08)] bg-[#08080d] p-5 transition hover:border-[rgba(245,166,35,0.3)] sm:p-6"
+                className="fade-up flex min-h-[280px] flex-col rounded-[10px] border border-[rgba(255,255,255,0.08)] bg-[#08080d] p-6 transition hover:border-[rgba(245,166,35,0.3)]"
                 key={testimonial.name}
                 style={{ animationDelay: `${0.08 * index}s` }}
               >
@@ -1537,18 +1502,18 @@ export default function LandingPage() {
                     role="img"
                     style={{ backgroundImage: `url(${testimonial.photo})` }}
                   />
-                  <span className="max-w-[65%] break-words rounded-full bg-[rgba(22,199,132,0.12)] px-3 py-1 text-right font-mono text-[11px] font-semibold leading-4 text-[#16C784]">
+                  <span className="rounded-full bg-[rgba(22,199,132,0.12)] px-3 py-1 font-mono text-[11px] font-semibold text-[#16C784]">
                     {testimonial.result}
                   </span>
                 </div>
-                <p className="mt-6 break-words text-sm leading-7 text-white/58">
+                <p className="mt-6 text-sm leading-7 text-white/58">
                   "{testimonial.quote}"
                 </p>
                 <div className="mt-auto pt-6">
-                  <p className="font-display break-words text-base font-bold text-white">
+                  <p className="font-display text-base font-bold text-white">
                     {testimonial.name}
                   </p>
-                  <p className="mt-1 break-words text-xs leading-5 text-white/38">
+                  <p className="mt-1 text-xs text-white/38">
                     {testimonial.location} - {testimonial.role}
                   </p>
                 </div>

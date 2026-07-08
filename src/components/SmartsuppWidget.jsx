@@ -1,3 +1,5 @@
+"use client";
+
 import Script from "next/script";
 
 export default function SmartsuppWidget() {
@@ -7,16 +9,15 @@ export default function SmartsuppWidget() {
     return null;
   }
 
-  const orientation = process.env.NEXT_PUBLIC_SMARTSUPP_ORIENTATION || "right";
-
   return (
     <>
       <Script id="smartsupp-init" strategy="afterInteractive">
         {`
           var _smartsupp = window._smartsupp || {};
           _smartsupp.key = ${JSON.stringify(smartsuppKey)};
-          _smartsupp.orientation = ${JSON.stringify(orientation)};
+          _smartsupp.orientation = "right";
           _smartsupp.hideWidget = true;
+          _smartsupp.hideMobileWidget = true;
           window._smartsupp = _smartsupp;
           window.smartsupp = window.smartsupp || function() {
             (window.smartsupp._ = window.smartsupp._ || []).push(arguments);
@@ -25,6 +26,7 @@ export default function SmartsuppWidget() {
       </Script>
       <Script
         id="smartsupp-loader"
+        onLoad={() => window.smartsupp?.("widget:hide")}
         src="https://www.smartsuppchat.com/loader.js"
         strategy="afterInteractive"
       />
