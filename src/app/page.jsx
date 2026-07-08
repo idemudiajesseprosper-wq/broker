@@ -15,9 +15,11 @@ import {
   Menu,
   MessageCircle,
   ReceiptText,
+  Send,
   ShieldCheck,
   Smartphone,
   Timer,
+  User,
   UserPlus,
   Users,
   Wallet,
@@ -277,6 +279,41 @@ const faqs = [
       "Use the available support channel from your account or public contact options to reach the team. Include the relevant transaction, deposit, withdrawal, or account details so your request can be reviewed faster.",
     icon: Mail,
     accent: "#FB7185",
+  },
+];
+
+const publicProofItems = [
+  {
+    label: "Earning",
+    name: "Mohammed from UAE",
+    detail: "just earned",
+    amount: "$5,856",
+    icon: ArrowUpRight,
+    color: "#16C784",
+  },
+  {
+    label: "Withdrawal",
+    name: "Ava from North Carolina",
+    detail: "just withdrew",
+    amount: "$2,430",
+    icon: Wallet,
+    color: "#F5A623",
+  },
+  {
+    label: "Earning",
+    name: "Daniel from London",
+    detail: "just earned",
+    amount: "$7,120",
+    icon: ArrowUpRight,
+    color: "#16C784",
+  },
+  {
+    label: "Withdrawal",
+    name: "Grace from Lagos",
+    detail: "just withdrew",
+    amount: "$1,980",
+    icon: ArrowDownRight,
+    color: "#38BDF8",
   },
 ];
 
@@ -709,34 +746,116 @@ function ChartTooltip({ active, payload }) {
   );
 }
 
+function PublicProofPopup({ item }) {
+  const Icon = item.icon;
+
+  return (
+    <aside
+      aria-live="polite"
+      className="fixed bottom-[230px] left-4 z-40 w-[min(390px,calc(100vw-32px))] overflow-hidden rounded-md border border-[rgba(245,166,35,0.45)] bg-[#050508] shadow-[0_22px_60px_rgba(0,0,0,0.42)] sm:bottom-4 sm:left-6"
+    >
+      <div className="flex items-center gap-4 px-4 py-3.5">
+        <span
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md"
+          style={{
+            backgroundColor: `${item.color}1F`,
+            color: item.color,
+          }}
+        >
+          <Icon aria-hidden="true" className="h-6 w-6" />
+        </span>
+        <span className="min-w-0">
+          <span className="block text-sm font-bold text-white">
+            {item.label}
+          </span>
+          <span className="block text-xs leading-5 text-white/70">
+            {item.name} has {item.detail}{" "}
+            <b className="font-bold text-white">{item.amount}</b>
+          </span>
+        </span>
+      </div>
+      <span
+        className="block h-0.5 origin-left animate-[proofTimer_5.2s_linear_both]"
+        style={{ backgroundColor: item.color }}
+      />
+    </aside>
+  );
+}
+
 function PublicChatAssistant() {
+  const [isOpen, setIsOpen] = useState(true);
   const [startingChat, setStartingChat] = useState(false);
 
-  const openSmartsuppChat = () => {
+  const supportMessage =
+    "Welcome! Whether you have a specific question or need assistance, we're here for you. What would you like to know?";
+
+  const startSupportChat = async () => {
     setStartingChat(true);
 
-    if (
-      typeof window !== "undefined" &&
-      typeof window.smartsupp === "function"
-    ) {
-      window.smartsupp("widget:hide");
-      window.smartsupp("chat:open");
-    }
+    try {
+      const response = await fetch("/api/support/chat-start", {
+        body: JSON.stringify({
+          message: supportMessage,
+          pageUrl: window.location.href,
+        }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      });
 
-    setStartingChat(false);
+      if (!response.ok) {
+        throw new Error("Unable to notify support");
+      }
+
+      setIsOpen(false);
+    } catch {
+      setIsOpen(true);
+    } finally {
+      setStartingChat(false);
+    }
   };
 
   return (
     <section className="fixed bottom-3 right-3 z-50 sm:bottom-4 sm:right-6">
+      {isOpen ? (
+        <div className="w-[min(300px,calc(100vw-24px))] rounded-[12px] border border-white/10 bg-white p-3 text-[#171717] shadow-[0_20px_54px_rgba(0,0,0,0.3)] sm:w-[min(380px,calc(100vw-32px))] sm:rounded-[14px] sm:p-4">
+          <div className="flex items-start justify-between gap-3 sm:gap-4">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F1F5F9] text-[#94A3B8] sm:h-11 sm:w-11">
+              <User aria-hidden="true" className="h-5 w-5 sm:h-6 sm:w-6" />
+            </span>
+            <button
+              aria-label="Close chat prompt"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 sm:h-9 sm:w-9"
+              onClick={() => setIsOpen(false)}
+              type="button"
+            >
+              <X className="h-4 w-4 sm:h-5 sm:w-5" />
+            </button>
+          </div>
+          <p className="mt-3 text-[13px] leading-5 text-slate-700 sm:mt-4 sm:text-[15px] sm:leading-6">
+            {supportMessage}
+          </p>
+          <button
+            className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-full bg-[#2445E8] px-4 text-sm font-semibold text-white transition hover:bg-[#1D39C4] disabled:opacity-60 sm:h-11 sm:px-5"
+            disabled={startingChat}
+            onClick={startSupportChat}
+            type="button"
+          >
+            <Send aria-hidden="true" className="h-4 w-4" />
+            {startingChat ? "Opening..." : "Let's chat"}
+          </button>
+        </div>
+      ) : null}
       <button
-        aria-label="Open support chat"
-        className="flex h-12 items-center justify-center gap-2 rounded-full bg-[#2445E8] px-4 text-sm font-semibold text-white shadow-[0_16px_45px_rgba(36,69,232,0.42)] transition hover:bg-[#1D39C4] disabled:opacity-60 sm:h-14 sm:px-5"
-        disabled={startingChat}
-        onClick={openSmartsuppChat}
+        aria-label={isOpen ? "Chat prompt is open" : "Open chat prompt"}
+        className="relative ml-auto mt-2 flex h-12 w-12 items-center justify-center rounded-full bg-[#2445E8] text-white shadow-[0_16px_45px_rgba(36,69,232,0.42)] transition hover:bg-[#1D39C4] sm:mt-3 sm:h-14 sm:w-14"
+        onClick={() => setIsOpen((value) => !value)}
         type="button"
       >
-        <MessageCircle className="h-5 w-5" />
-        {startingChat ? "Opening..." : "Let's chat"}
+        {isOpen ? (
+          <X className="h-5 w-5 sm:h-6 sm:w-6" />
+        ) : (
+          <MessageCircle className="h-6 w-6 sm:h-7 sm:w-7" />
+        )}
       </button>
     </section>
   );
@@ -781,6 +900,7 @@ export default function LandingPage() {
   const [pairIdx, setPairIdx] = useState(0);
   const [bitcoinMarket, setBitcoinMarket] = useState(null);
   const [bitcoinMarketStatus, setBitcoinMarketStatus] = useState("loading");
+  const [proofIndex, setProofIndex] = useState(0);
   const pair = PAIRS[pairIdx];
   const pairBasePrice =
     pair.live && bitcoinMarket?.priceUsd ? bitcoinMarket.priceUsd : pair.start;
@@ -850,6 +970,13 @@ export default function LandingPage() {
     const t = setTimeout(() => setFlash(null), 700);
     return () => clearTimeout(t);
   }, [flash]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setProofIndex((current) => current + 1);
+    }, 6400);
+    return () => clearInterval(interval);
+  }, []);
 
   const changePct = ((livePrice - openRef.current) / openRef.current) * 100;
   const isUp = changePct >= 0;
@@ -922,6 +1049,7 @@ export default function LandingPage() {
         .flash-down { animation: flashRed 0.7s ease-out; }
         @keyframes pulseRing { 0% { box-shadow: 0 0 0 0 rgba(245,166,35,0.35); } 100% { box-shadow: 0 0 0 10px rgba(245,166,35,0); } }
         .pulse-ring { animation: pulseRing 2s ease-out infinite; }
+        @keyframes proofTimer { from { transform: scaleX(1); } to { transform: scaleX(0); } }
       `}</style>
 
       {/* Ambient background grid + glow */}
@@ -1588,6 +1716,10 @@ export default function LandingPage() {
 
       {/* Footer */}
       <PublicFooter />
+      <PublicProofPopup
+        item={publicProofItems[proofIndex % publicProofItems.length]}
+        key={proofIndex}
+      />
       <BackToTopButton />
       <PublicChatAssistant />
     </main>

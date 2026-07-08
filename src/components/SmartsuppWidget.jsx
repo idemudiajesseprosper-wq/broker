@@ -15,7 +15,7 @@ export default function SmartsuppWidget() {
         {`
           var _smartsupp = window._smartsupp || {};
           _smartsupp.key = ${JSON.stringify(smartsuppKey)};
-          _smartsupp.orientation = "right";
+          _smartsupp.orientation = "left";
           _smartsupp.hideWidget = true;
           _smartsupp.hideMobileWidget = true;
           window._smartsupp = _smartsupp;
@@ -27,6 +27,7 @@ export default function SmartsuppWidget() {
       <Script
         id="smartsupp-loader"
         onLoad={() => window.smartsupp?.("widget:hide")}
+        onReady={() => window.smartsupp?.("widget:hide")}
         src="https://www.smartsuppchat.com/loader.js"
         strategy="afterInteractive"
       />
