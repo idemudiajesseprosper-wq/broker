@@ -776,7 +776,7 @@ function PublicProofPopup({ item }) {
   return (
     <aside
       aria-live="polite"
-      className="fixed bottom-4 left-4 z-40 w-[min(390px,calc(100vw-32px))] overflow-hidden rounded-md border border-[rgba(245,166,35,0.45)] bg-[#050508] shadow-[0_22px_60px_rgba(0,0,0,0.42)] sm:left-6"
+      className="absolute top-20 left-4 z-20 w-[min(390px,calc(100vw-32px))] overflow-hidden rounded-md border border-[rgba(245,166,35,0.45)] bg-[#050508] shadow-[0_22px_60px_rgba(0,0,0,0.42)] sm:left-6"
     >
       <div className="flex items-center gap-4 px-4 py-3.5">
         <span
@@ -1165,7 +1165,14 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero */}
-      <section className="mx-auto max-w-7xl px-5 pb-16 pt-14 sm:pt-20">
+      <section className="relative mx-auto max-w-7xl px-5 pb-16 pt-20 sm:pt-20">
+        <a
+          className="absolute top-3 right-5 inline-flex items-center gap-1.5 rounded-full border border-[rgba(245,166,35,0.35)] bg-[rgba(245,166,35,0.08)] px-3 py-1.5 text-xs font-semibold text-[#F5A623] shadow-sm transition hover:border-[#F5A623] hover:bg-[rgba(245,166,35,0.14)]"
+          href="#testimonials"
+        >
+          <MessageCircle aria-hidden="true" className="h-3.5 w-3.5" />
+          See testimonials
+        </a>
         <div className="grid gap-12 lg:grid-cols-[1fr_1.05fr] lg:items-center">
           {/* Left copy */}
           <div>
@@ -1596,7 +1603,7 @@ export default function LandingPage() {
       {/* Testimonials */}
       <section
         id="testimonials"
-        className="border-y border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.018)] px-5 py-20"
+        className="scroll-mt-20 border-y border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.018)] px-5 py-20"
       >
         <div className="mx-auto max-w-7xl">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
