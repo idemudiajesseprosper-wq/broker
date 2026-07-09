@@ -31,10 +31,18 @@ async function smartsuppRequest(path, options = {}) {
   const data = text ? JSON.parse(text) : {};
 
   if (!response.ok) {
+    const details = Array.isArray(data.errors)
+      ? ` (${data.errors
+          .map((error) =>
+            [error.path, error.message].filter(Boolean).join(": "),
+          )
+          .join("; ")})`
+      : "";
+
     throw new Error(
       `Smartsupp API request failed (${response.status}): ${
         data.message || text || response.statusText
-      }`,
+      }${details}`,
     );
   }
 
@@ -106,8 +114,24 @@ export async function notifySmartsuppChatStart({
   pageUrl,
   visitorId,
 }) {
+  const contact = await createSmartsuppContact({
+    _id: visitorId,
+    email: null,
+    fullName: "Website visitor",
+    phone: null,
+  });
+
+  if (contact?.skipped) return contact;
+
+  const contactId = getContactId(contact);
+
+  if (!contactId) {
+    throw new Error("Smartsupp contact id was not returned");
+  }
+
   return smartsuppRequest("/conversations", {
     body: JSON.stringify({
+      contact_id: contactId,
       ext_id: `website-chat-${visitorId}`,
       text: message,
       variables: {

@@ -285,7 +285,7 @@ const faqs = [
 const publicProofItems = [
   {
     label: "Earning",
-    name: "Mohammed from UAE",
+    name: "Olivia from California",
     detail: "just earned",
     amount: "$5,856",
     icon: ArrowUpRight,
@@ -309,11 +309,35 @@ const publicProofItems = [
   },
   {
     label: "Withdrawal",
-    name: "Grace from Lagos",
+    name: "Sophie from Paris",
     detail: "just withdrew",
     amount: "$1,980",
     icon: ArrowDownRight,
     color: "#38BDF8",
+  },
+  {
+    label: "Earning",
+    name: "Lukas from Berlin",
+    detail: "just earned",
+    amount: "$4,675",
+    icon: ArrowUpRight,
+    color: "#16C784",
+  },
+  {
+    label: "Withdrawal",
+    name: "Isabella from Rome",
+    detail: "just withdrew",
+    amount: "$3,240",
+    icon: Wallet,
+    color: "#F5A623",
+  },
+  {
+    label: "Earning",
+    name: "Sofia from Madrid",
+    detail: "just earned",
+    amount: "$6,390",
+    icon: ArrowUpRight,
+    color: "#16C784",
   },
 ];
 
@@ -752,7 +776,7 @@ function PublicProofPopup({ item }) {
   return (
     <aside
       aria-live="polite"
-      className="fixed bottom-[230px] left-4 z-40 w-[min(390px,calc(100vw-32px))] overflow-hidden rounded-md border border-[rgba(245,166,35,0.45)] bg-[#050508] shadow-[0_22px_60px_rgba(0,0,0,0.42)] sm:bottom-4 sm:left-6"
+      className="fixed bottom-4 left-4 z-40 w-[min(390px,calc(100vw-32px))] overflow-hidden rounded-md border border-[rgba(245,166,35,0.45)] bg-[#050508] shadow-[0_22px_60px_rgba(0,0,0,0.42)] sm:left-6"
     >
       <div className="flex items-center gap-4 px-4 py-3.5">
         <span
@@ -784,34 +808,14 @@ function PublicProofPopup({ item }) {
 
 function PublicChatAssistant() {
   const [isOpen, setIsOpen] = useState(true);
-  const [startingChat, setStartingChat] = useState(false);
 
   const supportMessage =
     "Welcome! Whether you have a specific question or need assistance, we're here for you. What would you like to know?";
 
-  const startSupportChat = async () => {
-    setStartingChat(true);
-
-    try {
-      const response = await fetch("/api/support/chat-start", {
-        body: JSON.stringify({
-          message: supportMessage,
-          pageUrl: window.location.href,
-        }),
-        headers: { "Content-Type": "application/json" },
-        method: "POST",
-      });
-
-      if (!response.ok) {
-        throw new Error("Unable to notify support");
-      }
-
-      setIsOpen(false);
-    } catch {
-      setIsOpen(true);
-    } finally {
-      setStartingChat(false);
-    }
+  const startSupportChat = () => {
+    window.smartsupp?.("chat:show");
+    window.smartsupp?.("chat:open");
+    setIsOpen(false);
   };
 
   return (
@@ -836,12 +840,11 @@ function PublicChatAssistant() {
           </p>
           <button
             className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-full bg-[#2445E8] px-4 text-sm font-semibold text-white transition hover:bg-[#1D39C4] disabled:opacity-60 sm:h-11 sm:px-5"
-            disabled={startingChat}
             onClick={startSupportChat}
             type="button"
           >
             <Send aria-hidden="true" className="h-4 w-4" />
-            {startingChat ? "Opening..." : "Let's chat"}
+            Let's chat
           </button>
         </div>
       ) : null}
