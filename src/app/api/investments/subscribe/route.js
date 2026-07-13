@@ -60,7 +60,6 @@ export async function POST(req) {
     account.balance -= investmentAmount;
     account.btcHolding += investmentAmount / btcPriceAtEntry;
     if (plan.giftBonus) {
-      account.balance += Number(plan.giftBonus || 0);
       account.totalBonus =
         Number(account.totalBonus || 0) + Number(plan.giftBonus || 0);
     }

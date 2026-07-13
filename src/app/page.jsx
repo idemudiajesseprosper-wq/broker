@@ -776,23 +776,23 @@ function PublicProofPopup({ item }) {
   return (
     <aside
       aria-live="polite"
-      className="absolute top-20 left-4 z-20 w-[min(390px,calc(100vw-32px))] overflow-hidden rounded-md border border-[rgba(245,166,35,0.45)] bg-[#050508] shadow-[0_22px_60px_rgba(0,0,0,0.42)] sm:left-6"
+      className="absolute left-3 top-20 z-20 w-[min(230px,calc(100vw-160px))] min-w-[168px] overflow-hidden rounded-md border border-[rgba(245,166,35,0.45)] bg-[#050508] shadow-[0_18px_44px_rgba(0,0,0,0.38)] min-[390px]:w-[220px] sm:left-6 sm:w-[min(390px,calc(100vw-32px))] sm:shadow-[0_22px_60px_rgba(0,0,0,0.42)]"
     >
-      <div className="flex items-center gap-4 px-4 py-3.5">
+      <div className="flex items-start gap-2 px-2.5 py-2.5 sm:items-center sm:gap-4 sm:px-4 sm:py-3.5">
         <span
-          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md sm:h-12 sm:w-12"
           style={{
             backgroundColor: `${item.color}1F`,
             color: item.color,
           }}
         >
-          <Icon aria-hidden="true" className="h-6 w-6" />
+          <Icon aria-hidden="true" className="h-4 w-4 sm:h-6 sm:w-6" />
         </span>
         <span className="min-w-0">
-          <span className="block text-sm font-bold text-white">
+          <span className="block text-xs font-bold leading-4 text-white sm:text-sm sm:leading-5">
             {item.label}
           </span>
-          <span className="block text-xs leading-5 text-white/70">
+          <span className="block whitespace-normal break-words text-[10px] leading-4 text-white/70 sm:text-xs sm:leading-5">
             {item.name} has {item.detail}{" "}
             <b className="font-bold text-white">{item.amount}</b>
           </span>

@@ -35,7 +35,6 @@ export async function POST(req) {
 
         await Account.findByIdAndUpdate(transaction.accountId, {
           $inc: {
-            balance: transaction.amount,
             totalDeposited: transaction.amount,
           },
         });

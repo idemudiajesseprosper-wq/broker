@@ -55,7 +55,13 @@ const tabs = [
 ];
 
 const moneySchema = z.object({
-  action: z.enum(["deposit", "withdraw", "bonus"]),
+  action: z.enum([
+    "deposit",
+    "withdraw",
+    "bonus",
+    "balance_credit",
+    "balance_debit",
+  ]),
   amount: z.coerce.number().positive(),
   bonusType: z.string().optional(),
   reason: z.string().min(2),
@@ -275,7 +281,7 @@ export default function AdminPage() {
     const parsed = moneySchema.safeParse(values);
     if (!parsed.success) {
       const error =
-        "Select a user, choose deposit, withdrawal, or bonus, enter an amount, and add a note";
+        "Select a user, choose deposit, withdrawal, add balance, remove balance, or bonus, enter an amount, and add a note";
       setMessage(error);
       toast.error("Account update not saved", error);
       return;
@@ -283,8 +289,10 @@ export default function AdminPage() {
 
     const labels = {
       bonus: "Bonus added",
+      balance_credit: "Balance added",
+      balance_debit: "Balance removed",
       deposit: "Deposit added",
-      withdraw: "Withdrawal completed",
+      withdraw: "Withdrawal added",
     };
 
     const saved = await mutate(
@@ -749,7 +757,8 @@ function ManageAccountsTable({
         <div>
           <h3 className="text-lg font-semibold">Manage Accounts</h3>
           <p className="mt-1 text-sm opacity-60">
-            Edit deposits, withdrawals, and bonuses directly from the user list.
+            Edit active deposits, balances, and bonuses directly from the user
+            list.
           </p>
         </div>
         <div className="relative w-full md:w-80">
@@ -836,6 +845,8 @@ function ManageAccountsTable({
                   >
                     <option value="deposit">Add deposit</option>
                     <option value="withdraw">Withdrawal</option>
+                    <option value="balance_credit">Add balance</option>
+                    <option value="balance_debit">Remove balance</option>
                     <option value="bonus">Add bonus</option>
                   </Select>
                   {action.action === "bonus" ? (

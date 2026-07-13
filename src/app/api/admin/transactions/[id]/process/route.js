@@ -37,7 +37,6 @@ export async function PUT(req, context) {
     if (transaction.type === "deposit" && action === "approve") {
       await Account.findByIdAndUpdate(transaction.accountId, {
         $inc: {
-          balance: transaction.amount,
           totalDeposited: transaction.amount,
         },
       });

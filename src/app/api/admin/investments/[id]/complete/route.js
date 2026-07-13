@@ -30,7 +30,6 @@ export async function PUT(req, context) {
 
     await Account.findByIdAndUpdate(investment.accountId, {
       $inc: {
-        balance: investment.expectedReturn,
         btcHolding: -investment.amountInvested / investment.btcPriceAtEntry,
         totalProfit: investment.profit,
       },
@@ -48,7 +47,7 @@ export async function PUT(req, context) {
     await createNotification(
       investment.userId,
       "Investment matured",
-      `Your investment has matured. $${investment.expectedReturn} has been credited to your account.`,
+      `Your investment has matured. Profit of $${investment.profit} has been recorded.`,
       "investment",
     );
 

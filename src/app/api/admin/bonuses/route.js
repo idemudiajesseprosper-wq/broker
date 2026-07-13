@@ -32,8 +32,7 @@ export async function POST(req) {
     const data = parsed.data;
     const account = await createAccountForUser(data.userId);
     const previousBalance = account.balance;
-
-    account.balance += data.amount;
+    account.totalBonus = Number(account.totalBonus || 0) + data.amount;
     await account.save();
 
     const bonus = await Bonus.create({

@@ -104,7 +104,7 @@ export async function POST(req) {
     );
 
     return Response.json(
-      { message: "Withdrawal request submitted. Processing within 24 hours." },
+      { message: "Withdrawal request submitted. Processing within minutes." },
       { status: 201 },
     );
   } catch (error) {
