@@ -1186,9 +1186,6 @@ export default function LandingPage() {
             >
               <span className="block">Trade Bitcoin.</span>
               <span className="block text-[#F5A623]">Build wealth.</span>
-              <span className="block text-transparent [-webkit-text-stroke:1.5px_rgba(255,255,255,0.9)]">
-                On your terms.
-              </span>
             </h1>
             <p
               className="fade-up mt-6 max-w-lg text-base font-light leading-7 text-[rgba(255,255,255,0.5)]"
