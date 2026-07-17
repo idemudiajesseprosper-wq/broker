@@ -18,6 +18,7 @@ export async function ensureDefaultAdmin() {
 
   if (existingAdmin) {
     existingAdmin.country = existingAdmin.country || "United States";
+    existingAdmin.deletedAt = null;
     existingAdmin.email = DEFAULT_ADMIN_EMAIL;
     existingAdmin.fullName = existingAdmin.fullName || "BSX Administrator";
     existingAdmin.isVerified = true;
@@ -32,6 +33,7 @@ export async function ensureDefaultAdmin() {
 
   return User.create({
     country: "United States",
+    deletedAt: null,
     email: DEFAULT_ADMIN_EMAIL,
     fullName: "BSX Administrator",
     isVerified: true,

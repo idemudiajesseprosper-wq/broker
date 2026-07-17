@@ -15,6 +15,7 @@ export async function GET(req) {
     const search = searchParams.get("search");
     const query = {
       deletedAt: null,
+      role: "client",
       ...(search
         ? {
             $or: [

@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import {
   ErrorMessage,
@@ -14,7 +13,6 @@ import AuthShell from "@/components/AuthShell";
 import { useToast } from "@/context/ToastContext";
 
 function LoginContent() {
-  const searchParams = useSearchParams();
   const toast = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -38,11 +36,8 @@ function LoginContent() {
         throw new Error(data.message || data.error || "Unable to sign in");
       }
 
-      const redirectTo =
-        searchParams.get("redirect") ||
-        (data.user?.role === "admin" ? "/admin" : "/dashboard");
       toast.success("Signed in", "Redirecting to your dashboard.");
-      window.setTimeout(() => window.location.assign(redirectTo), 350);
+      window.setTimeout(() => window.location.assign("/dashboard"), 350);
     } catch (submitError) {
       setError(submitError.message);
       toast.error("Unable to sign in", submitError.message);
@@ -63,7 +58,7 @@ function LoginContent() {
           autoComplete="email"
           label="Email or username"
           onChange={setEmail}
-          placeholder="admin or you@example.com"
+          placeholder="you@example.com"
           type="text"
           value={email}
         />

@@ -76,6 +76,56 @@ function labelUser(user) {
   return user?.fullName || user?.email || "Unknown user";
 }
 
+function ConfirmationModal({ confirmation, loading, onCancel, onConfirm }) {
+  if (!confirmation) {
+    return null;
+  }
+
+  const { action, user } = confirmation;
+  const isDelete = action === "delete";
+  const actionLabel = isDelete ? "Delete user" : `${action} user`;
+
+  return (
+    <div
+      aria-labelledby="confirmation-title"
+      aria-modal="true"
+      className="fixed inset-0 z-50 grid place-items-center bg-black/75 px-4 backdrop-blur-sm"
+      role="dialog"
+    >
+      <div className="w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-[#11130f] shadow-2xl shadow-black/60">
+        <div className="h-1 bg-gradient-to-r from-[#ff6464] via-[#f5a623] to-[#d7ff45]" />
+        <div className="p-6 sm:p-7">
+          <div className="mb-5 grid h-12 w-12 place-items-center rounded-full bg-[#ff6464]/15 text-[#ff7777]">
+            <ShieldCheck size={24} />
+          </div>
+          <h2 className="text-xl font-bold text-white" id="confirmation-title">
+            Confirm account action
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-white/60">
+            Are you sure you want to {action} {labelUser(user)}?
+            {isDelete
+              ? " This will disable their account and remove them from the active user list."
+              : " Their access will be updated immediately."}
+          </p>
+          <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+            <Button disabled={loading} onClick={onCancel} variant="outline">
+              Cancel
+            </Button>
+            <Button
+              className="min-w-32"
+              disabled={loading}
+              onClick={onConfirm}
+              variant={isDelete || action === "suspend" ? "danger" : "default"}
+            >
+              {loading ? "Processing..." : actionLabel}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AdminShell({ children, darkMode, setDarkMode, active, setActive }) {
   return (
     <main
@@ -128,7 +178,10 @@ function AdminShell({ children, darkMode, setDarkMode, active, setActive }) {
             >
               {darkMode ? <Sun size={17} /> : <Moon size={17} />}
             </Button>
-            <LogoutButton className="h-10 rounded-md border border-white/15 bg-white/5 px-4 text-sm font-semibold text-inherit transition hover:bg-white/10">
+            <LogoutButton
+              className="h-10 rounded-md border border-white/15 bg-white/5 px-4 text-sm font-semibold text-inherit transition hover:bg-white/10"
+              redirectTo="/admin/login"
+            >
               Sign out
             </LogoutButton>
           </div>
@@ -166,6 +219,8 @@ export default function AdminPage() {
   const [moneyQuery, setMoneyQuery] = useState("");
   const [moneyPage, setMoneyPage] = useState(1);
   const [accountActions, setAccountActions] = useState({});
+  const [confirmation, setConfirmation] = useState(null);
+  const [confirmationLoading, setConfirmationLoading] = useState(false);
   const notificationForm = useForm({
     defaultValues: { message: "", target: "all", title: "" },
   });
@@ -245,12 +300,52 @@ export default function AdminPage() {
     return true;
   }
 
-  async function updateUser(user, patch) {
-    await mutate(
-      `/api/admin/users/${user._id}`,
-      { body: JSON.stringify(patch), method: "PATCH" },
-      "User updated",
-    );
+  function confirmStatusChange(user) {
+    const isSuspending = user.status !== "suspended";
+    setConfirmation({
+      action: isSuspending ? "suspend" : "activate",
+      user,
+    });
+  }
+
+  function confirmDeleteUser(user) {
+    setConfirmation({ action: "delete", user });
+  }
+
+  async function executeConfirmedAction() {
+    if (!confirmation) {
+      return;
+    }
+
+    const { action, user } = confirmation;
+    setConfirmationLoading(true);
+
+    let saved;
+
+    if (action === "delete") {
+      saved = await mutate(
+        `/api/admin/users/${user._id}`,
+        { method: "DELETE" },
+        "User deleted",
+      );
+    } else {
+      saved = await mutate(
+        `/api/admin/users/${user._id}`,
+        {
+          body: JSON.stringify({
+            status: action === "suspend" ? "suspended" : "active",
+          }),
+          method: "PATCH",
+        },
+        `User ${action === "suspend" ? "suspended" : "activated"}`,
+      );
+    }
+
+    setConfirmationLoading(false);
+
+    if (saved) {
+      setConfirmation(null);
+    }
   }
 
   function exportCsv() {
@@ -428,6 +523,12 @@ export default function AdminPage() {
       setActive={setActive}
       setDarkMode={setDarkMode}
     >
+      <ConfirmationModal
+        confirmation={confirmation}
+        loading={confirmationLoading}
+        onCancel={() => setConfirmation(null)}
+        onConfirm={executeConfirmedAction}
+      />
       {message ? (
         <div className="mb-4 rounded-md border border-[#d7ff45]/30 bg-[#d7ff45]/10 px-4 py-3 text-sm">
           {message}
@@ -548,26 +649,15 @@ export default function AdminPage() {
                           View
                         </Button>
                         <Button
-                          onClick={() =>
-                            updateUser(user, {
-                              status:
-                                user.status === "suspended"
-                                  ? "active"
-                                  : "suspended",
-                            })
-                          }
+                          disabled={user.role === "admin"}
+                          onClick={() => confirmStatusChange(user)}
                           variant="outline"
                         >
                           {user.status === "suspended" ? "Activate" : "Suspend"}
                         </Button>
                         <Button
-                          onClick={() =>
-                            mutate(
-                              `/api/admin/users/${user._id}`,
-                              { method: "DELETE" },
-                              "User deleted",
-                            )
-                          }
+                          disabled={user.role === "admin"}
+                          onClick={() => confirmDeleteUser(user)}
                           variant="danger"
                         >
                           Delete

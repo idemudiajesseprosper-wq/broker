@@ -1,5 +1,5 @@
 const fs = require("node:fs");
-const bcrypt = require("bcryptjs");
+const Cryptr = require("cryptr");
 const mongoose = require("mongoose");
 
 function loadEnvFile(path) {
@@ -42,9 +42,17 @@ const adminEmail = (
   .toLowerCase();
 const adminPassword =
   env.ADMIN_PASSWORD || process.env.ADMIN_PASSWORD || "Admin@12345";
+const cryptrSecret = env.CRYPTR_SECRET_KEY || process.env.CRYPTR_SECRET_KEY;
+
+if (!cryptrSecret) {
+  throw new Error("CRYPTR_SECRET_KEY is not set");
+}
+
+const cryptr = new Cryptr(cryptrSecret);
 
 const userSchema = new mongoose.Schema({
   country: String,
+  deletedAt: Date,
   email: { lowercase: true, trim: true, type: String },
   fullName: String,
   isVerified: Boolean,
@@ -55,9 +63,9 @@ const userSchema = new mongoose.Schema({
   username: String,
 });
 
-userSchema.pre("save", async function hashPassword() {
+userSchema.pre("save", function encryptPassword() {
   if (this.isModified("password")) {
-    this.password = await bcrypt.hash(this.password, 12);
+    this.password = cryptr.encrypt(this.password);
   }
 });
 
@@ -79,6 +87,7 @@ async function main() {
   }
 
   admin.country = admin.country || "United States";
+  admin.deletedAt = null;
   admin.email = adminEmail;
   admin.fullName = admin.fullName || "BSX Administrator";
   admin.isVerified = true;
@@ -93,7 +102,7 @@ async function main() {
   const verifiedAdmin = await User.findOne({ username: "admin" }).select(
     "+password",
   );
-  const verified = await bcrypt.compare(adminPassword, verifiedAdmin.password);
+  const verified = cryptr.decrypt(verifiedAdmin.password) === adminPassword;
 
   console.log(
     verified

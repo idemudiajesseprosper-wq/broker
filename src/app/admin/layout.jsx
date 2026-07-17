@@ -1,22 +1,28 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 
 export default function AdminLayout({ children }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { loading, user } = useAuth();
+  const isLoginPage = pathname === "/admin/login";
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push("/login?redirect=/admin");
+    if (!isLoginPage && !loading && !user) {
+      router.push("/admin/login");
     }
 
-    if (!loading && user && user.role !== "admin") {
+    if (!isLoginPage && !loading && user && user.role !== "admin") {
       router.push("/dashboard");
     }
-  }, [loading, router, user]);
+  }, [isLoginPage, loading, router, user]);
+
+  if (isLoginPage) {
+    return <>{children}</>;
+  }
 
   if (loading || !user || user.role !== "admin") {
     return null;

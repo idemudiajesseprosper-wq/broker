@@ -2,6 +2,7 @@ import { jwtVerify } from "jose";
 import { NextResponse } from "next/server";
 
 const authRoutes = new Set([
+  "/admin/login",
   "/login",
   "/register",
   "/forgot-password",
@@ -19,8 +20,8 @@ function getToken(request) {
   return request.cookies.get("bsx_token")?.value;
 }
 
-function redirectToLogin(request, params = {}) {
-  const loginUrl = new URL("/login", request.url);
+function redirectToLogin(request, pathname = "/login", params = {}) {
+  const loginUrl = new URL(pathname, request.url);
 
   for (const [key, value] of Object.entries(params)) {
     loginUrl.searchParams.set(key, value);
@@ -46,13 +47,21 @@ export async function proxy(request) {
   const { pathname } = request.nextUrl;
   const isDashboardRoute =
     pathname === "/dashboard" || pathname.startsWith("/dashboard/");
-  const isAdminRoute = pathname === "/admin" || pathname.startsWith("/admin/");
+  const isAdminLogin = pathname === "/admin/login";
+  const isAdminRoute =
+    !isAdminLogin && (pathname === "/admin" || pathname.startsWith("/admin/"));
   const isAuthRoute = authRoutes.has(pathname);
   const token = getToken(request);
 
   if (!token) {
-    if (isDashboardRoute || isAdminRoute) {
-      return redirectToLogin(request, {
+    if (isAdminRoute) {
+      return redirectToLogin(request, "/admin/login", {
+        redirect: `${request.nextUrl.pathname}${request.nextUrl.search}`,
+      });
+    }
+
+    if (isDashboardRoute) {
+      return redirectToLogin(request, "/login", {
         redirect: `${request.nextUrl.pathname}${request.nextUrl.search}`,
       });
     }
@@ -66,6 +75,12 @@ export async function proxy(request) {
 
     if (isAdminRoute && role !== "admin") {
       return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+
+    if (isAdminLogin) {
+      return NextResponse.redirect(
+        new URL(role === "admin" ? "/admin" : "/dashboard", request.url),
+      );
     }
 
     if (isAuthRoute) {
@@ -84,7 +99,9 @@ export async function proxy(request) {
       },
     });
   } catch {
-    return redirectToLogin(request, { reason: "session_expired" });
+    return redirectToLogin(request, isAdminRoute ? "/admin/login" : "/login", {
+      reason: "session_expired",
+    });
   }
 }
 

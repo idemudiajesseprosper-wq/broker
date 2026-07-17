@@ -7,7 +7,6 @@ import { generateToken } from "@/utils/generateToken";
 
 export const runtime = "nodejs";
 
-// Authenticates a verified user and returns a JWT for protected requests.
 export async function POST(req) {
   try {
     await connectDB();
@@ -23,58 +22,34 @@ export async function POST(req) {
     }
 
     const identifier = String(email).toLowerCase().trim();
-    const user = await User.findOne({
+    const admin = await User.findOne({
       $or: [{ email: identifier }, { username: identifier }],
+      role: "admin",
     }).select("+password");
 
-    if (!user) {
+    if (!admin || !(await admin.comparePassword(password))) {
       return Response.json(
-        { error: "Invalid email or password" },
+        { error: "Invalid administrator credentials" },
         { status: 401 },
       );
     }
 
-    const isPasswordMatch = await user.comparePassword(password);
-
-    if (!isPasswordMatch) {
+    if (admin.deletedAt || admin.status === "suspended") {
       return Response.json(
-        { error: "Invalid email or password" },
-        { status: 401 },
-      );
-    }
-
-    if (user.role === "admin") {
-      return Response.json(
-        { error: "Administrators must use the admin login page." },
+        { error: "This administrator account is unavailable." },
         { status: 403 },
       );
     }
 
-    if (user.deletedAt || user.status === "suspended") {
-      return Response.json(
-        { error: "This account has been suspended. Contact support." },
-        { status: 403 },
-      );
-    }
+    await User.findByIdAndUpdate(admin._id, { lastLogin: new Date() });
 
-    if (!user.isVerified) {
-      return Response.json(
-        { message: "Please verify your email first." },
-        { status: 403 },
-      );
-    }
-
-    await User.findByIdAndUpdate(user._id, { lastLogin: new Date() });
-
-    const token = generateToken(user._id.toString(), user.role);
+    const token = generateToken(admin._id.toString(), "admin");
     const response = NextResponse.json(
       {
         user: {
-          id: user._id.toString(),
-          fullName: user.fullName,
-          email: user.email,
-          role: user.role,
-          kycStatus: user.kycStatus,
+          id: admin._id.toString(),
+          fullName: admin.fullName,
+          email: admin.email,
         },
       },
       { status: 200 },

@@ -5,7 +5,11 @@ import { useState } from "react";
 import { useToast } from "@/context/ToastContext";
 import { clearToken } from "@/utils/auth-client";
 
-export default function LogoutButton({ children, className }) {
+export default function LogoutButton({
+  children,
+  className,
+  redirectTo = "/login",
+}) {
   const router = useRouter();
   const toast = useToast();
   const [loading, setLoading] = useState(false);
@@ -16,7 +20,7 @@ export default function LogoutButton({ children, className }) {
     await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
     clearToken();
     toast.success("Signed out", "You have been logged out securely.");
-    router.push("/login");
+    router.push(redirectTo);
   }
 
   return (

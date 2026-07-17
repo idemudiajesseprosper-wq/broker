@@ -2,11 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useState } from "react";
+import { useToast } from "@/context/ToastContext";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const router = useRouter();
+  const toast = useToast();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -45,8 +47,9 @@ export function AuthProvider({ children }) {
   }, []);
 
   async function logout() {
-    await fetch("/api/auth/logout", { method: "POST" });
+    await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
     setUser(null);
+    toast.success("Signed out", "You have been logged out securely.");
     router.push("/login");
   }
 

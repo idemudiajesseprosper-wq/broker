@@ -84,6 +84,10 @@ export async function PATCH(req, context) {
       return notFound("User not found");
     }
 
+    if (previous.role === "admin" && update.status === "suspended") {
+      return badRequest("Admin accounts cannot be suspended");
+    }
+
     const user = await User.findByIdAndUpdate(id, update, {
       new: true,
       runValidators: true,
@@ -126,6 +130,18 @@ export async function DELETE(req, context) {
     const admin = adminOnly(req);
 
     const { id } = await context.params;
+    const target = await User.findOne({ _id: id, deletedAt: null }).select(
+      "role",
+    );
+
+    if (!target) {
+      return notFound("User not found");
+    }
+
+    if (target.role === "admin") {
+      return badRequest("Admin accounts cannot be deleted");
+    }
+
     const user = await User.findOneAndUpdate(
       { _id: id, deletedAt: null },
       { deletedAt: new Date(), status: "suspended" },

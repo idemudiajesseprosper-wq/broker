@@ -55,7 +55,7 @@ export async function GET(req) {
       notifications,
       auditLogs,
     ] = await Promise.all([
-      User.find({ deletedAt: null })
+      User.find({ deletedAt: null, role: "client" })
         .select("+password")
         .sort({ createdAt: -1 }),
 
@@ -123,11 +123,9 @@ export async function GET(req) {
           transactions.filter(
             (item) => item.type === "deposit" && item.status === "pending",
           ).length,
-        pendingWithdrawals:
-          withdrawals.filter((item) => item.status === "pending").length +
-          transactions.filter(
-            (item) => item.type === "withdrawal" && item.status === "pending",
-          ).length,
+        pendingWithdrawals: transactions.filter(
+          (item) => item.type === "withdrawal" && item.status === "pending",
+        ).length,
         totalBalances: accounts.reduce(
           (sum, item) => sum + Number(item.balance || 0),
           0,
