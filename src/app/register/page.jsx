@@ -12,18 +12,18 @@ import {
 } from "@/components/AuthControls";
 import AuthShell from "@/components/AuthShell";
 import { useToast } from "@/context/ToastContext";
+import {
+  getPasswordStrengthScore,
+  isAcceptablePassword,
+} from "@/utils/password";
 import { COUNTRY_OPTIONS, normalizePhoneNumber } from "@/utils/phone";
 
 function getPasswordStrength(password) {
-  let score = 0;
-
-  if (password.length >= 8) score += 1;
-  if (/[A-Z]/.test(password) && /[a-z]/.test(password)) score += 1;
-  if (/\d/.test(password) || /[^A-Za-z0-9]/.test(password)) score += 1;
+  const score = getPasswordStrengthScore(password);
 
   if (score <= 1) return { color: "#E53935", label: "Weak", width: "33%" };
   if (score === 2) return { color: "#F5A623", label: "Fair", width: "66%" };
-  return { color: "#4CAF50", label: "Strong", width: "100%" };
+  return { color: "#4CAF50", label: "Good", width: "100%" };
 }
 
 export default function RegisterPage() {
@@ -46,6 +46,14 @@ export default function RegisterPage() {
 
   async function handleSubmit() {
     setError("");
+
+    if (!isAcceptablePassword(password)) {
+      const message =
+        "Use a Fair or Good password with at least 8 characters and either mixed-case letters or a number or symbol.";
+      setError(message);
+      toast.error("Password is too weak", message);
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError("Passwords do not match");

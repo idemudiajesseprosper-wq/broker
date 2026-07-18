@@ -4,16 +4,15 @@ import Script from "next/script";
 
 export default function SmartsuppWidget() {
   const smartsuppKey = process.env.NEXT_PUBLIC_SMARTSUPP_KEY;
-  const chatStorageMigration = "2026-07-09-chat-reset-1";
+  const chatStorageMigration = "2026-07-18-widget-left-1";
 
   if (!smartsuppKey) {
     return null;
   }
 
   return (
-    <>
-      <Script id="smartsupp-init" strategy="afterInteractive">
-        {`
+    <Script id="smartsupp-init" strategy="afterInteractive">
+      {`
           // Smartsupp persists the visitor and conversation per browser. Clear the
           // pre-fix conversation once on every device, before its loader reads it.
           try {
@@ -41,17 +40,21 @@ export default function SmartsuppWidget() {
           var _smartsupp = window._smartsupp || {};
           _smartsupp.key = ${JSON.stringify(smartsuppKey)};
           _smartsupp.orientation = "left";
+          _smartsupp.offsetX = 24;
           window._smartsupp = _smartsupp;
           window.smartsupp = window.smartsupp || function() {
             (window.smartsupp._ = window.smartsupp._ || []).push(arguments);
           };
-        `}
-      </Script>
-      <Script
-        id="smartsupp-loader"
-        src="https://www.smartsuppchat.com/loader.js"
-        strategy="afterInteractive"
-      />
-    </>
+          if (!document.getElementById("smartsupp-loader")) {
+            var loader = document.createElement("script");
+            loader.id = "smartsupp-loader";
+            loader.type = "text/javascript";
+            loader.charset = "utf-8";
+            loader.async = true;
+            loader.src = "https://www.smartsuppchat.com/loader.js?";
+            document.head.appendChild(loader);
+          }
+      `}
+    </Script>
   );
 }

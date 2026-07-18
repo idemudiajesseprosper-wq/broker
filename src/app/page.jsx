@@ -776,7 +776,7 @@ function PublicProofPopup({ item }) {
   return (
     <aside
       aria-live="polite"
-      className="absolute left-3 top-20 z-20 w-[min(230px,calc(100vw-160px))] min-w-[168px] overflow-hidden rounded-md border border-[rgba(245,166,35,0.45)] bg-[#050508] shadow-[0_18px_44px_rgba(0,0,0,0.38)] min-[390px]:w-[220px] sm:left-6 sm:w-[min(390px,calc(100vw-32px))] sm:shadow-[0_22px_60px_rgba(0,0,0,0.42)]"
+      className="absolute left-3 top-[76px] z-20 w-[min(230px,calc(100vw-160px))] min-w-[168px] overflow-hidden rounded-md border border-[rgba(245,166,35,0.45)] bg-[#050508] shadow-[0_18px_44px_rgba(0,0,0,0.38)] min-[390px]:w-[220px] sm:left-6 sm:w-[min(390px,calc(100vw-32px))] sm:shadow-[0_22px_60px_rgba(0,0,0,0.42)]"
     >
       <div className="flex items-start gap-2 px-2.5 py-2.5 sm:items-center sm:gap-4 sm:px-4 sm:py-3.5">
         <span
@@ -819,7 +819,7 @@ function PublicChatAssistant() {
   };
 
   return (
-    <section className="fixed bottom-3 right-3 z-50 sm:bottom-4 sm:right-6">
+    <section className="fixed bottom-3 right-3 z-[10000001] sm:bottom-4 sm:right-6">
       {isOpen ? (
         <div className="w-[min(300px,calc(100vw-24px))] rounded-[12px] border border-white/10 bg-white p-3 text-[#171717] shadow-[0_20px_54px_rgba(0,0,0,0.3)] sm:w-[min(380px,calc(100vw-32px))] sm:rounded-[14px] sm:p-4">
           <div className="flex items-start justify-between gap-3 sm:gap-4">
@@ -884,7 +884,7 @@ function BackToTopButton() {
   return (
     <button
       aria-label="Back to top"
-      className="fixed bottom-24 right-4 z-40 flex h-11 w-11 items-center justify-center rounded-full border border-[rgba(245,166,35,0.34)] bg-[#08080d] text-[#F5A623] shadow-[0_14px_40px_rgba(0,0,0,0.34)] transition hover:bg-[rgba(245,166,35,0.1)] sm:right-6"
+      className="fixed bottom-24 left-4 z-40 flex h-11 w-11 items-center justify-center rounded-full border border-[rgba(245,166,35,0.34)] bg-[#08080d] text-[#F5A623] shadow-[0_14px_40px_rgba(0,0,0,0.34)] transition hover:bg-[rgba(245,166,35,0.1)] sm:left-6"
       onClick={() => window.scrollTo({ behavior: "smooth", top: 0 })}
       type="button"
     >
@@ -1176,12 +1176,8 @@ export default function LandingPage() {
         <div className="grid gap-12 lg:grid-cols-[1fr_1.05fr] lg:items-center">
           {/* Left copy */}
           <div>
-            <div className="fade-up inline-flex items-center gap-2 rounded-full border border-[rgba(245,166,35,0.25)] bg-[rgba(245,166,35,0.06)] px-4 py-2 text-xs font-medium uppercase tracking-[0.2em] text-[#F5A623]">
-              <span className="blink-dot h-2 w-2 rounded-full bg-[#F5A623]" />
-              Live Bitcoin markets
-            </div>
             <h1
-              className="fade-up font-display mt-7 text-[34px] font-extrabold leading-[1.05] text-white sm:text-[54px]"
+              className="fade-up font-display text-[34px] font-extrabold leading-[1.05] text-white sm:text-[54px]"
               style={{ animationDelay: "0.1s" }}
             >
               <span className="block">Trade Bitcoin.</span>

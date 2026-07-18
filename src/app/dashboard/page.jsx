@@ -171,7 +171,7 @@ function AccountOverview({ account, balanceVisible, transactions }) {
             Withdrawal
           </p>
           <p className="mt-2 text-xl font-bold text-[#E8C84A]">
-            {formatCurrency(account.totalWithdrawn || lastWithdrawal)}
+            {formatCurrency(account.totalWithdrawn ?? lastWithdrawal)}
           </p>
         </div>
       </div>

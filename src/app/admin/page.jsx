@@ -58,14 +58,18 @@ const moneySchema = z.object({
   action: z.enum([
     "deposit",
     "withdraw",
+    "set_withdrawn",
     "bonus",
     "balance_credit",
     "balance_debit",
   ]),
-  amount: z.coerce.number().positive(),
+  amount: z.coerce.number().nonnegative(),
   bonusType: z.string().optional(),
   reason: z.string().min(2),
   userId: z.string().min(1),
+}).refine((data) => data.action === "set_withdrawn" || data.amount > 0, {
+  message: "Amount must be greater than zero",
+  path: ["amount"],
 });
 
 function formatDate(value) {
@@ -388,6 +392,7 @@ export default function AdminPage() {
       balance_debit: "Balance removed",
       deposit: "Deposit added",
       withdraw: "Withdrawal added",
+      set_withdrawn: "Withdrawal total updated",
     };
 
     const saved = await mutate(
@@ -847,8 +852,8 @@ function ManageAccountsTable({
         <div>
           <h3 className="text-lg font-semibold">Manage Accounts</h3>
           <p className="mt-1 text-sm opacity-60">
-            Edit active deposits, balances, and bonuses directly from the user
-            list.
+            Edit deposits, withdrawals, balances, and bonuses directly from
+            the user list.
           </p>
         </div>
         <div className="relative w-full md:w-80">
@@ -935,6 +940,7 @@ function ManageAccountsTable({
                   >
                     <option value="deposit">Add deposit</option>
                     <option value="withdraw">Withdrawal</option>
+                    <option value="set_withdrawn">Set total withdrawn</option>
                     <option value="balance_credit">Add balance</option>
                     <option value="balance_debit">Remove balance</option>
                     <option value="bonus">Add bonus</option>

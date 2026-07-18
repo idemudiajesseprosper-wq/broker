@@ -18,14 +18,18 @@ const moneySchema = z.object({
   action: z.enum([
     "deposit",
     "withdraw",
+    "set_withdrawn",
     "bonus",
     "balance_credit",
     "balance_debit",
   ]),
-  amount: z.coerce.number().positive(),
+  amount: z.coerce.number().nonnegative(),
   bonusType: z.string().optional(),
   note: z.string().min(2),
   userId: z.string().min(1),
+}).refine((data) => data.action === "set_withdrawn" || data.amount > 0, {
+  message: "Amount must be greater than zero",
+  path: ["amount"],
 });
 
 function getTransactionType(action) {
@@ -60,6 +64,7 @@ export async function POST(req) {
     const account = await createAccountForUser(data.userId);
     const amount = Number(data.amount);
     const previousBalance = Number(account.balance || 0);
+    const previousTotalWithdrawn = Number(account.totalWithdrawn || 0);
 
     if (data.action === "balance_debit" && previousBalance < amount) {
       return badRequest("Insufficient account balance");
@@ -73,6 +78,8 @@ export async function POST(req) {
       account.totalDeposited = Number(account.totalDeposited || 0) + amount;
     } else if (data.action === "withdraw") {
       account.totalWithdrawn = Number(account.totalWithdrawn || 0) + amount;
+    } else if (data.action === "set_withdrawn") {
+      account.totalWithdrawn = amount;
     } else if (data.action === "bonus") {
       account.totalBonus = Number(account.totalBonus || 0) + amount;
     }
@@ -113,22 +120,32 @@ export async function POST(req) {
       });
     }
 
-    await Transaction.create({
-      accountId: account._id,
-      amount,
-      note: data.note,
-      processedAt: new Date(),
-      status: "approved",
-      type: transactionType,
-      userId: data.userId,
-    });
+    if (data.action !== "set_withdrawn") {
+      await Transaction.create({
+        accountId: account._id,
+        amount,
+        note: data.note,
+        processedAt: new Date(),
+        status: "approved",
+        type: transactionType,
+        userId: data.userId,
+      });
+    }
 
     await logAdminAction({
       action: `Manual ${data.action}`,
       adminId: admin.userId,
       ipAddress: req.headers.get("x-forwarded-for"),
-      newValue: { amount, balance: account.balance, note: data.note },
-      previousValue: { balance: previousBalance },
+      newValue: {
+        amount,
+        balance: account.balance,
+        note: data.note,
+        totalWithdrawn: account.totalWithdrawn,
+      },
+      previousValue: {
+        balance: previousBalance,
+        totalWithdrawn: previousTotalWithdrawn,
+      },
       userId: data.userId,
     });
 
@@ -162,6 +179,12 @@ export async function POST(req) {
         notification: `A withdrawal record of $${amount} has been added to your account.`,
         subject: "Withdrawal record added",
         title: "Withdrawal added",
+      },
+      set_withdrawn: {
+        email: `Hello ${user.fullName || "there"}, your lifetime withdrawal total has been updated to $${amount}.`,
+        notification: `Your lifetime withdrawal total has been updated to $${amount}.`,
+        subject: "Withdrawal total updated",
+        title: "Withdrawal total updated",
       },
     };
 

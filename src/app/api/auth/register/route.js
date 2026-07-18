@@ -4,6 +4,7 @@ import User from "@/models/User";
 import { createAccountForUser } from "@/utils/account";
 import { serverError } from "@/utils/api";
 import { sendVerificationEmail } from "@/utils/email";
+import { isAcceptablePassword } from "@/utils/password";
 import { normalizePhoneNumber } from "@/utils/phone";
 import { notifySmartsuppSignup } from "@/utils/smartsupp";
 
@@ -20,6 +21,16 @@ export async function POST(req) {
       return Response.json(
         {
           error: "Full name, email, phone, country, and password are required",
+        },
+        { status: 400 },
+      );
+    }
+
+    if (!isAcceptablePassword(password)) {
+      return Response.json(
+        {
+          error:
+            "Use a Fair or Good password with at least 8 characters and either mixed-case letters or a number or symbol.",
         },
         { status: 400 },
       );
