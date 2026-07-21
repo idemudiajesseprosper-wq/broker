@@ -579,17 +579,11 @@ export default function DashboardPage() {
         transactions={transactions}
       />
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
+      <section className="grid gap-4">
         <StatCard
-          icon="↗"
-          label="Total Profit"
-          trend
-          value={formatCurrency(account.totalProfit)}
-        />
-        <StatCard
-          icon="◔"
+          icon="◆"
           label="Active Investments"
-          value={`${activeInvestments.length} plans`}
+          value={account.accountPlan || "Silver"}
         />
       </section>
 

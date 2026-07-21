@@ -404,7 +404,7 @@ export default function DepositPage() {
                       {formatCurrency(transaction.amount)}
                     </td>
                     <td className="py-4 text-white/50">
-                      {transaction.paystackReference || "Manual review"}
+                      {transaction.note || "Manual review"}
                     </td>
                     <td className="py-4">
                       <StatusBadge status={transaction.status} />

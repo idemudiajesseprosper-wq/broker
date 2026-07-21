@@ -819,7 +819,7 @@ function PublicChatAssistant() {
   };
 
   return (
-    <section className="fixed bottom-24 left-6 right-auto z-[10000001] sm:bottom-4 sm:left-auto sm:right-6">
+    <section className="fixed bottom-24 right-4 z-[10000001] sm:right-6">
       {isOpen ? (
         <div className="w-[min(300px,calc(100vw-24px))] rounded-[12px] border border-white/10 bg-white p-3 text-[#171717] shadow-[0_20px_54px_rgba(0,0,0,0.3)] sm:w-[min(380px,calc(100vw-32px))] sm:rounded-[14px] sm:p-4">
           <div className="flex items-start justify-between gap-3 sm:gap-4">
@@ -850,7 +850,7 @@ function PublicChatAssistant() {
       ) : null}
       <button
         aria-label={isOpen ? "Chat prompt is open" : "Open chat prompt"}
-        className="relative ml-0 mt-2 flex h-12 w-12 items-center justify-center rounded-full bg-[#2445E8] text-white shadow-[0_16px_45px_rgba(36,69,232,0.42)] transition hover:bg-[#1D39C4] sm:ml-auto sm:mt-3 sm:h-14 sm:w-14"
+        className="relative ml-auto mt-2 flex h-12 w-12 items-center justify-center rounded-full bg-[#2445E8] text-white shadow-[0_16px_45px_rgba(36,69,232,0.42)] transition hover:bg-[#1D39C4] sm:mt-3 sm:h-14 sm:w-14"
         onClick={() => setIsOpen((value) => !value)}
         type="button"
       >

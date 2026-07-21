@@ -32,7 +32,6 @@ const transactionSchema = new mongoose.Schema({
     enum: ["pending", "approved", "rejected", "failed"],
     default: "pending",
   },
-  paystackReference: String,
   paymentMethod: String,
   paymentProof: String,
   withdrawalMethod: String,

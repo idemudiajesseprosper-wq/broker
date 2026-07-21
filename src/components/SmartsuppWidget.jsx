@@ -4,7 +4,7 @@ import Script from "next/script";
 
 export default function SmartsuppWidget() {
   const smartsuppKey = process.env.NEXT_PUBLIC_SMARTSUPP_KEY;
-  const chatStorageMigration = "2026-07-18-widget-left-1";
+  const chatStorageMigration = "2026-07-21-widget-right-1";
 
   if (!smartsuppKey) {
     return null;
@@ -39,7 +39,7 @@ export default function SmartsuppWidget() {
 
           var _smartsupp = window._smartsupp || {};
           _smartsupp.key = ${JSON.stringify(smartsuppKey)};
-          _smartsupp.orientation = "left";
+          _smartsupp.orientation = "right";
           _smartsupp.offsetX = 24;
           window._smartsupp = _smartsupp;
           window.smartsupp = window.smartsupp || function() {

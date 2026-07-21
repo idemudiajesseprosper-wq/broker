@@ -1,6 +1,7 @@
 import { protect } from "@root/middleware/auth";
 import { connectDB } from "@/config/db";
 import Account from "@/models/Account";
+import { DEFAULT_ACCOUNT_PLAN } from "@/utils/accountPlans";
 import { notFound, serverError } from "@/utils/api";
 
 export const runtime = "nodejs";
@@ -17,6 +18,8 @@ export async function GET(req) {
     }
 
     const accountPayload = account.toObject();
+    accountPayload.accountPlan =
+      accountPayload.accountPlan || DEFAULT_ACCOUNT_PLAN;
     accountPayload.totalBonus = Number(accountPayload.totalBonus ?? 0);
 
     return Response.json({ account: accountPayload }, { status: 200 });

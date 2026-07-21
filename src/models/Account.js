@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { ACCOUNT_PLANS, DEFAULT_ACCOUNT_PLAN } from "@/utils/accountPlans";
 
 const accountSchema = new mongoose.Schema({
   userId: {
@@ -40,6 +41,11 @@ const accountSchema = new mongoose.Schema({
   btcHolding: {
     type: Number,
     default: 0,
+  },
+  accountPlan: {
+    type: String,
+    enum: ACCOUNT_PLANS,
+    default: DEFAULT_ACCOUNT_PLAN,
   },
   status: {
     type: String,

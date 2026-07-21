@@ -203,8 +203,7 @@ export default function TransactionsPage() {
                       <StatusBadge status={transaction.status} />
                     </td>
                     <td className="py-4 text-white/45">
-                      {transaction.paystackReference ||
-                        transaction.note ||
+                      {transaction.note ||
                         transaction.bankDetails?.bankName ||
                         "Account activity"}
                     </td>

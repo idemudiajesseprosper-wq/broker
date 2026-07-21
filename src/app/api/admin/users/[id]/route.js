@@ -4,6 +4,7 @@ import Account from "@/models/Account";
 import Investment from "@/models/Investment";
 import Transaction from "@/models/Transaction";
 import User from "@/models/User";
+import { ACCOUNT_PLANS } from "@/utils/accountPlans";
 import { badRequest, notFound, serverError } from "@/utils/api";
 import { logAdminAction } from "@/utils/audit";
 
@@ -56,6 +57,7 @@ export async function PATCH(req, context) {
 
     const { id } = await context.params;
     const body = await req.json();
+    const accountPlan = body.accountPlan;
     const allowed = [
       "country",
       "email",
@@ -76,6 +78,10 @@ export async function PATCH(req, context) {
       return badRequest("Status must be active or suspended");
     }
 
+    if (accountPlan !== undefined && !ACCOUNT_PLANS.includes(accountPlan)) {
+      return badRequest("Invalid account plan");
+    }
+
     const previous = await User.findOne({ _id: id, deletedAt: null }).select(
       "-password",
     );
@@ -93,19 +99,26 @@ export async function PATCH(req, context) {
       runValidators: true,
     }).select("-password");
 
-    if (update.status) {
-      await Account.findOneAndUpdate(
-        { userId: id },
-        { status: update.status },
-        { new: true },
-      );
+    if (update.status || accountPlan !== undefined) {
+      const accountUpdate = {};
+
+      if (update.status) accountUpdate.status = update.status;
+      if (accountPlan !== undefined) accountUpdate.accountPlan = accountPlan;
+
+      await Account.findOneAndUpdate({ userId: id }, accountUpdate, {
+        new: true,
+      });
     }
 
     await logAdminAction({
-      action: update.status ? `User ${update.status}` : "User edited",
+      action: accountPlan
+        ? `Account plan changed to ${accountPlan}`
+        : update.status
+          ? `User ${update.status}`
+          : "User edited",
       adminId: admin.userId,
       ipAddress: req.headers.get("x-forwarded-for"),
-      newValue: update,
+      newValue: { ...update, ...(accountPlan ? { accountPlan } : {}) },
       previousValue: previous.toObject(),
       userId: id,
     });

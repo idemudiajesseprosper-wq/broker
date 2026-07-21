@@ -37,6 +37,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input, Select } from "@/components/ui/input";
 import { useToast } from "@/context/ToastContext";
+import { ACCOUNT_PLANS, DEFAULT_ACCOUNT_PLAN } from "@/utils/accountPlans";
 
 const money = new Intl.NumberFormat("en-US", {
   currency: "USD",
@@ -453,6 +454,17 @@ export default function AdminPage() {
     await submitMoneyAction(values);
   }
 
+  async function changeAccountPlan(user, accountPlan) {
+    await mutate(
+      `/api/admin/users/${user._id}`,
+      {
+        body: JSON.stringify({ accountPlan }),
+        method: "PATCH",
+      },
+      `Account upgraded to ${accountPlan}`,
+    );
+  }
+
   async function sendNotification(values) {
     await mutate(
       "/api/admin/notifications",
@@ -606,6 +618,7 @@ export default function AdminPage() {
                     "Phone",
                     "Country",
                     "Balance",
+                    "Account Plan",
                     "Status",
                     "Registration",
                     "Actions",
@@ -637,6 +650,21 @@ export default function AdminPage() {
                       <td className="px-3 py-3">{user.country || "—"}</td>
                       <td className="px-3 py-3">
                         {money.format(account?.balance || 0)}
+                      </td>
+                      <td className="px-3 py-3">
+                        <Select
+                          disabled={user.role === "admin"}
+                          onChange={(event) =>
+                            changeAccountPlan(user, event.target.value)
+                          }
+                          value={account?.accountPlan || DEFAULT_ACCOUNT_PLAN}
+                        >
+                          {ACCOUNT_PLANS.map((plan) => (
+                            <option key={plan} value={plan}>
+                              {plan}
+                            </option>
+                          ))}
+                        </Select>
                       </td>
                       <td className="px-3 py-3">
                         <Badge tone={user.status}>{user.status}</Badge>
@@ -1201,7 +1229,7 @@ function TransactionTable({ onProcess, rows }) {
             <td className="px-3 py-3 capitalize">{row.type}</td>
             <td className="px-3 py-3">{money.format(row.amount || 0)}</td>
             <td className="px-3 py-3">
-              {row.paymentMethod || row.withdrawalMethod || "Paystack"}
+              {row.paymentMethod || row.withdrawalMethod || "Bank transfer"}
             </td>
             <td className="px-3 py-3">
               {row.paymentProof ? (
