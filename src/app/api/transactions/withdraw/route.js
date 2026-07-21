@@ -2,6 +2,7 @@ import { protect } from "@root/middleware/auth";
 import { connectDB } from "@/config/db";
 import Account from "@/models/Account";
 import Transaction from "@/models/Transaction";
+import { ensureWithdrawalPin } from "@/utils/account";
 import { badRequest, serverError } from "@/utils/api";
 import { createNotification } from "@/utils/createNotification";
 
@@ -20,9 +21,11 @@ export async function POST(req) {
       bankName,
       routingNumber,
       walletAddress,
+      withdrawalPin,
       withdrawalMethod = "Transfer",
     } = await req.json();
     const usdAmount = Number(amount);
+    const pin = String(withdrawalPin || "").trim();
     const usesBankDetails = withdrawalMethod === "Transfer";
     const usesWireDetails = withdrawalMethod === "Wire Transfer";
     const usesZelleDetails = withdrawalMethod === "Zelle";
@@ -35,6 +38,22 @@ export async function POST(req) {
 
     if (!usdAmount || usdAmount < 20) {
       return badRequest("Minimum withdrawal is $20");
+    }
+
+    if (!/^[a-z\d]{8}$/i.test(pin)) {
+      return badRequest("A valid withdrawal PIN is required");
+    }
+
+    const account = await Account.findOne({ userId }).select("+withdrawalPin");
+
+    if (!account) {
+      return badRequest("Account is not ready");
+    }
+
+    await ensureWithdrawalPin(account);
+
+    if (pin.toUpperCase() !== account.withdrawalPin) {
+      return badRequest("Withdrawal PIN is invalid. Contact the admin.");
     }
 
     if (usesBankDetails && (!bankName || !accountNumber || !accountName)) {
@@ -64,9 +83,7 @@ export async function POST(req) {
       return badRequest("Zelle phone number is required");
     }
 
-    const account = await Account.findOne({ userId });
-
-    if (!account || account.balance < usdAmount) {
+    if (account.balance < usdAmount) {
       return badRequest("Insufficient balance");
     }
 

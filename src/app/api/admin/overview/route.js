@@ -8,6 +8,7 @@ import Notification from "@/models/Notification";
 import Transaction from "@/models/Transaction";
 import User from "@/models/User";
 import Withdrawal from "@/models/Withdrawal";
+import { createAccountForUser, ensureWithdrawalPin } from "@/utils/account";
 import { ensureDefaultAdmin } from "@/utils/adminSeed";
 import { serverError } from "@/utils/api";
 
@@ -59,7 +60,9 @@ export async function GET(req) {
         .select("+password")
         .sort({ createdAt: -1 }),
 
-      Account.find().populate("userId", "fullName email username"),
+      Account.find()
+        .select("+withdrawalPin")
+        .populate("userId", "fullName email username"),
       Transaction.find()
         .populate("userId", "fullName email")
         .sort({ createdAt: -1 }),
@@ -79,6 +82,20 @@ export async function GET(req) {
         .sort({ createdAt: -1 })
         .limit(30),
     ]);
+
+    const accountsByUserId = new Map(
+      accounts.map((account) => [String(account.userId?._id), account]),
+    );
+    const ensuredAccounts = await Promise.all(
+      users.map((user) => {
+        const account = accountsByUserId.get(String(user._id));
+        return account
+          ? ensureWithdrawalPin(account)
+          : createAccountForUser(user._id);
+      }),
+    );
+
+    accounts.splice(0, accounts.length, ...ensuredAccounts);
 
     const usersWithPasswords = users.map((user) => ({
       ...user.toObject(),

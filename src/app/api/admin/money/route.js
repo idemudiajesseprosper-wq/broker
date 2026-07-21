@@ -27,9 +27,6 @@ const moneySchema = z.object({
   bonusType: z.string().optional(),
   note: z.string().min(2),
   userId: z.string().min(1),
-}).refine((data) => data.action === "set_withdrawn" || data.amount > 0, {
-  message: "Amount must be greater than zero",
-  path: ["amount"],
 });
 
 function getTransactionType(action) {
@@ -64,24 +61,18 @@ export async function POST(req) {
     const account = await createAccountForUser(data.userId);
     const amount = Number(data.amount);
     const previousBalance = Number(account.balance || 0);
+    const previousTotalBonus = Number(account.totalBonus || 0);
+    const previousTotalDeposited = Number(account.totalDeposited || 0);
     const previousTotalWithdrawn = Number(account.totalWithdrawn || 0);
 
-    if (data.action === "balance_debit" && previousBalance < amount) {
-      return badRequest("Insufficient account balance");
-    }
-
-    if (data.action === "balance_debit") {
-      account.balance = previousBalance - amount;
-    } else if (data.action === "balance_credit") {
-      account.balance = previousBalance + amount;
+    if (data.action === "balance_debit" || data.action === "balance_credit") {
+      account.balance = amount;
     } else if (data.action === "deposit") {
-      account.totalDeposited = Number(account.totalDeposited || 0) + amount;
-    } else if (data.action === "withdraw") {
-      account.totalWithdrawn = Number(account.totalWithdrawn || 0) + amount;
-    } else if (data.action === "set_withdrawn") {
+      account.totalDeposited = amount;
+    } else if (data.action === "withdraw" || data.action === "set_withdrawn") {
       account.totalWithdrawn = amount;
     } else if (data.action === "bonus") {
-      account.totalBonus = Number(account.totalBonus || 0) + amount;
+      account.totalBonus = amount;
     }
 
     await account.save();
@@ -140,10 +131,14 @@ export async function POST(req) {
         amount,
         balance: account.balance,
         note: data.note,
+        totalBonus: account.totalBonus,
+        totalDeposited: account.totalDeposited,
         totalWithdrawn: account.totalWithdrawn,
       },
       previousValue: {
         balance: previousBalance,
+        totalBonus: previousTotalBonus,
+        totalDeposited: previousTotalDeposited,
         totalWithdrawn: previousTotalWithdrawn,
       },
       userId: data.userId,
@@ -151,34 +146,34 @@ export async function POST(req) {
 
     const messages = {
       bonus: {
-        email: `Hello ${user.fullName || "there"}, your account has been credited with a bonus of $${amount}.`,
-        notification: `Your account has been credited with a bonus of $${amount}.`,
-        subject: "Your account has been credited with a bonus",
-        title: "Bonus credited",
+        email: `Hello ${user.fullName || "there"}, your account bonus has been updated to $${amount}.`,
+        notification: `Your account bonus has been updated to $${amount}.`,
+        subject: "Your account bonus has been updated",
+        title: "Bonus updated",
       },
       balance_credit: {
-        email: `Hello ${user.fullName || "there"}, your account balance has been credited with $${amount}.`,
-        notification: `Your account balance has been credited with $${amount}.`,
-        subject: "Your balance has been credited",
-        title: "Balance credited",
+        email: `Hello ${user.fullName || "there"}, your account balance has been updated to $${amount}.`,
+        notification: `Your account balance has been updated to $${amount}.`,
+        subject: "Your balance has been updated",
+        title: "Balance updated",
       },
       balance_debit: {
-        email: `Hello ${user.fullName || "there"}, your account balance has been debited by $${amount}.`,
-        notification: `Your account balance has been debited by $${amount}.`,
-        subject: "Your balance has been debited",
-        title: "Balance debited",
+        email: `Hello ${user.fullName || "there"}, your account balance has been updated to $${amount}.`,
+        notification: `Your account balance has been updated to $${amount}.`,
+        subject: "Your balance has been updated",
+        title: "Balance updated",
       },
       deposit: {
-        email: `Hello ${user.fullName || "there"}, an active deposit of $${amount} has been added to your account.`,
-        notification: `An active deposit of $${amount} has been added to your account.`,
-        subject: "Active deposit added",
-        title: "Deposit added",
+        email: `Hello ${user.fullName || "there"}, your active deposit total has been updated to $${amount}.`,
+        notification: `Your active deposit total has been updated to $${amount}.`,
+        subject: "Active deposit updated",
+        title: "Deposit updated",
       },
       withdraw: {
-        email: `Hello ${user.fullName || "there"}, a withdrawal record of $${amount} has been added to your account.`,
-        notification: `A withdrawal record of $${amount} has been added to your account.`,
-        subject: "Withdrawal record added",
-        title: "Withdrawal added",
+        email: `Hello ${user.fullName || "there"}, your lifetime withdrawal total has been updated to $${amount}.`,
+        notification: `Your lifetime withdrawal total has been updated to $${amount}.`,
+        subject: "Withdrawal total updated",
+        title: "Withdrawal total updated",
       },
       set_withdrawn: {
         email: `Hello ${user.fullName || "there"}, your lifetime withdrawal total has been updated to $${amount}.`,

@@ -29,6 +29,7 @@ function getPasswordStrength(password) {
 export default function RegisterPage() {
   const toast = useToast();
   const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [country, setCountry] = useState("");
@@ -46,6 +47,14 @@ export default function RegisterPage() {
 
   async function handleSubmit() {
     setError("");
+
+    if (!/^[a-zA-Z0-9_]{3,30}$/.test(username)) {
+      const message =
+        "Username must be 3–30 characters using only letters, numbers, or underscores.";
+      setError(message);
+      toast.error("Invalid username", message);
+      return;
+    }
 
     if (!isAcceptablePassword(password)) {
       const message =
@@ -81,6 +90,7 @@ export default function RegisterPage() {
           fullName,
           password,
           phone: normalizedPhone,
+          username,
         }),
         headers: { "Content-Type": "application/json" },
         method: "POST",
@@ -140,6 +150,13 @@ export default function RegisterPage() {
             onChange={setFullName}
             placeholder="Your full name"
             value={fullName}
+          />
+          <TextField
+            autoComplete="username"
+            label="Username"
+            onChange={setUsername}
+            placeholder="Choose a username"
+            value={username}
           />
           <TextField
             autoComplete="email"

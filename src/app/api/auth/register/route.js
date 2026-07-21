@@ -15,12 +15,26 @@ export async function POST(req) {
   try {
     await connectDB();
 
-    const { country, fullName, email, password, phone } = await req.json();
+    const { country, fullName, email, password, phone, username } =
+      await req.json();
 
-    if (!country || !fullName || !email || !password || !phone) {
+    if (!country || !fullName || !email || !password || !phone || !username) {
       return Response.json(
         {
-          error: "Full name, email, phone, country, and password are required",
+          error:
+            "Full name, username, email, phone, country, and password are required",
+        },
+        { status: 400 },
+      );
+    }
+
+    const normalizedUsername = String(username).toLowerCase().trim();
+
+    if (!/^[a-z0-9_]{3,30}$/.test(normalizedUsername)) {
+      return Response.json(
+        {
+          error:
+            "Username must be 3–30 characters using only letters, numbers, or underscores.",
         },
         { status: 400 },
       );
@@ -49,7 +63,20 @@ export async function POST(req) {
     }
 
     const normalizedEmail = String(email).toLowerCase().trim();
-    const existingUser = await User.findOne({ email: normalizedEmail });
+    const [existingUser, usernameOwner] = await Promise.all([
+      User.findOne({ email: normalizedEmail }),
+      User.findOne({ username: normalizedUsername }),
+    ]);
+
+    if (
+      usernameOwner &&
+      String(usernameOwner._id) !== String(existingUser?._id)
+    ) {
+      return Response.json(
+        { error: "Username already taken" },
+        { status: 409 },
+      );
+    }
 
     if (existingUser?.isVerified) {
       return Response.json({ error: "Email already taken" }, { status: 409 });
@@ -71,6 +98,7 @@ export async function POST(req) {
     user.isVerified = false;
     user.password = password;
     user.phone = normalizedPhone;
+    user.username = normalizedUsername;
 
     await user.save();
 
@@ -106,6 +134,13 @@ export async function POST(req) {
       { status: 201 },
     );
   } catch (error) {
+    if (error?.code === 11000 && error?.keyPattern?.username) {
+      return Response.json(
+        { error: "Username already taken" },
+        { status: 409 },
+      );
+    }
+
     return serverError(error);
   }
 }

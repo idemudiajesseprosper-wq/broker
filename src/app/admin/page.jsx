@@ -4,6 +4,7 @@ import {
   Activity,
   Bell,
   CircleDollarSign,
+  Copy,
   Download,
   KeyRound,
   LayoutDashboard,
@@ -67,9 +68,6 @@ const moneySchema = z.object({
   bonusType: z.string().optional(),
   reason: z.string().min(2),
   userId: z.string().min(1),
-}).refine((data) => data.action === "set_withdrawn" || data.amount > 0, {
-  message: "Amount must be greater than zero",
-  path: ["amount"],
 });
 
 function formatDate(value) {
@@ -387,11 +385,11 @@ export default function AdminPage() {
     }
 
     const labels = {
-      bonus: "Bonus added",
-      balance_credit: "Balance added",
-      balance_debit: "Balance removed",
-      deposit: "Deposit added",
-      withdraw: "Withdrawal added",
+      bonus: "Bonus updated",
+      balance_credit: "Balance updated",
+      balance_debit: "Balance updated",
+      deposit: "Deposit updated",
+      withdraw: "Withdrawal updated",
       set_withdrawn: "Withdrawal total updated",
     };
 
@@ -846,14 +844,37 @@ function ManageAccountsTable({
   totalUsers,
   users,
 }) {
+  const toast = useToast();
+
+  async function copyWithdrawalPin(pin) {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(pin);
+      } else {
+        const input = document.createElement("textarea");
+        input.value = pin;
+        input.style.position = "fixed";
+        input.style.opacity = "0";
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand("copy");
+        input.remove();
+      }
+
+      toast.success("Withdrawal PIN copied", "The PIN is on your clipboard.");
+    } catch {
+      toast.error("Unable to copy PIN", "Press and hold the PIN to copy it.");
+    }
+  }
+
   return (
     <Card className="overflow-x-auto">
       <div className="mb-5 flex flex-col justify-between gap-3 md:flex-row md:items-end">
         <div>
           <h3 className="text-lg font-semibold">Manage Accounts</h3>
           <p className="mt-1 text-sm opacity-60">
-            Edit deposits, withdrawals, balances, and bonuses directly from
-            the user list.
+            Edit deposits, withdrawals, balances, and bonuses directly from the
+            user list.
           </p>
         </div>
         <div className="relative w-full md:w-80">
@@ -867,7 +888,7 @@ function ManageAccountsTable({
         </div>
       </div>
 
-      <table className="w-full min-w-[1180px] text-left text-sm">
+      <table className="w-full min-w-[1450px] text-left text-sm">
         <thead className="border-b border-white/10 text-xs uppercase opacity-55">
           <tr>
             {[
@@ -877,6 +898,7 @@ function ManageAccountsTable({
               "Deposited",
               "Withdrawn",
               "Bonus",
+              "Withdrawal PIN",
               "Action",
               "Amount",
               "Note",
@@ -901,7 +923,6 @@ function ManageAccountsTable({
               reason: "",
               ...(actions[user._id] || {}),
             };
-
             return (
               <tr className="border-b border-white/5 align-top" key={user._id}>
                 <td className="px-3 py-3">
@@ -931,6 +952,22 @@ function ManageAccountsTable({
                   {money.format(account?.totalBonus || 0)}
                 </td>
                 <td className="px-3 py-3">
+                  {account?.withdrawalPin ? (
+                    <button
+                      aria-label={`Copy withdrawal PIN ${account.withdrawalPin}`}
+                      className="inline-flex min-h-10 items-center gap-2 rounded-md border border-[#d7ff45]/20 bg-[#d7ff45]/5 px-3 font-mono text-xs text-[#d7ff45] transition hover:bg-[#d7ff45]/10 active:scale-[0.98]"
+                      onClick={() => copyWithdrawalPin(account.withdrawalPin)}
+                      title="Copy withdrawal PIN"
+                      type="button"
+                    >
+                      {account.withdrawalPin}
+                      <Copy aria-hidden="true" size={14} />
+                    </button>
+                  ) : (
+                    <span className="text-xs opacity-45">Generating...</span>
+                  )}
+                </td>
+                <td className="px-3 py-3">
                   <Select
                     className="h-10 min-w-36"
                     onChange={(event) =>
@@ -938,12 +975,10 @@ function ManageAccountsTable({
                     }
                     value={action.action}
                   >
-                    <option value="deposit">Add deposit</option>
-                    <option value="withdraw">Withdrawal</option>
-                    <option value="set_withdrawn">Set total withdrawn</option>
-                    <option value="balance_credit">Add balance</option>
-                    <option value="balance_debit">Remove balance</option>
-                    <option value="bonus">Add bonus</option>
+                    <option value="deposit">Set deposit total</option>
+                    <option value="withdraw">Set withdrawal total</option>
+                    <option value="balance_credit">Set balance</option>
+                    <option value="bonus">Set bonus total</option>
                   </Select>
                   {action.action === "bonus" ? (
                     <Input

@@ -143,6 +143,7 @@ export default function WithdrawPage() {
     routingNumber: "",
     walletAddress: "",
     withdrawalMethod: "",
+    withdrawalPin: "",
   });
   const [activeMethod, setActiveMethod] = useState("");
   const [loading, setLoading] = useState(true);
@@ -221,6 +222,7 @@ export default function WithdrawPage() {
         routingNumber: "",
         walletAddress: "",
         withdrawalMethod: "",
+        withdrawalPin: "",
       });
       setActiveMethod("");
       await loadData();
@@ -247,6 +249,7 @@ export default function WithdrawPage() {
         routingNumber: "",
         walletAddress: "",
         withdrawalMethod: next,
+        withdrawalPin: "",
       }));
       return next;
     });
@@ -365,6 +368,32 @@ export default function WithdrawPage() {
                           </div>
                         ),
                       )}
+                      <div>
+                        <label
+                          className="mb-3 block text-sm font-medium text-white"
+                          htmlFor={`${method.value}-withdrawal-pin`}
+                        >
+                          Withdrawal PIN
+                        </label>
+                        <Input
+                          autoComplete="off"
+                          className="h-14 rounded-sm bg-white font-mono text-base text-[#111827] placeholder:text-[#777] focus:border-[#65B75B]"
+                          id={`${method.value}-withdrawal-pin`}
+                          maxLength={8}
+                          minLength={8}
+                          onChange={(event) =>
+                            updateField("withdrawalPin", event.target.value)
+                          }
+                          placeholder="Enter the PIN provided by admin"
+                          required
+                          type="password"
+                          value={form.withdrawalPin}
+                        />
+                        <p className="mt-2 text-xs leading-5 text-white/45">
+                          Contact the admin to receive the withdrawal PIN for
+                          your account.
+                        </p>
+                      </div>
                       <Button
                         className="h-14 w-full bg-[#65B75B] text-lg text-white hover:bg-[#75C86A]"
                         disabled={submitting}
@@ -386,9 +415,12 @@ export default function WithdrawPage() {
           </h2>
           <div className="mt-5 space-y-3">
             {[
-              ["Submit", "Send your payout amount and bank details."],
               [
-                "Review",
+                "Enter PIN",
+                "Use the account withdrawal PIN supplied by the admin.",
+              ],
+              [
+                "Submit",
                 "The operations team checks balance and payout details.",
               ],
               [

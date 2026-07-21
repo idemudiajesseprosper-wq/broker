@@ -18,6 +18,10 @@ const userSchema = new mongoose.Schema({
   },
   username: {
     type: String,
+    lowercase: true,
+    match: /^[a-z0-9_]{3,30}$/,
+    maxlength: 30,
+    minlength: 3,
     trim: true,
     sparse: true,
     unique: true,

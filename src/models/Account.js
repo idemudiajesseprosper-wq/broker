@@ -11,6 +11,12 @@ const accountSchema = new mongoose.Schema({
     type: String,
     unique: true,
   },
+  withdrawalPin: {
+    type: String,
+    unique: true,
+    sparse: true,
+    select: false,
+  },
   balance: {
     type: Number,
     default: 0,
