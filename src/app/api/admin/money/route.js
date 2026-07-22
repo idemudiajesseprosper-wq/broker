@@ -10,7 +10,6 @@ import { createAccountForUser } from "@/utils/account";
 import { badRequest, serverError } from "@/utils/api";
 import { logAdminAction } from "@/utils/audit";
 import { createNotification } from "@/utils/createNotification";
-import { sendPlainEmail } from "@/utils/email";
 
 export const runtime = "nodejs";
 
@@ -52,7 +51,7 @@ export async function POST(req) {
     }
 
     const data = parsed.data;
-    const user = await User.findById(data.userId).select("fullName email");
+    const user = await User.findById(data.userId).select("fullName");
 
     if (!user) {
       return badRequest("User not found");
@@ -146,39 +145,27 @@ export async function POST(req) {
 
     const messages = {
       bonus: {
-        email: `Hello ${user.fullName || "there"}, your account bonus has been updated to $${amount}.`,
         notification: `Your account bonus has been updated to $${amount}.`,
-        subject: "Your account bonus has been updated",
         title: "Bonus updated",
       },
       balance_credit: {
-        email: `Hello ${user.fullName || "there"}, your account balance has been updated to $${amount}.`,
         notification: `Your account balance has been updated to $${amount}.`,
-        subject: "Your balance has been updated",
         title: "Balance updated",
       },
       balance_debit: {
-        email: `Hello ${user.fullName || "there"}, your account balance has been updated to $${amount}.`,
         notification: `Your account balance has been updated to $${amount}.`,
-        subject: "Your balance has been updated",
         title: "Balance updated",
       },
       deposit: {
-        email: `Hello ${user.fullName || "there"}, your active deposit total has been updated to $${amount}.`,
         notification: `Your active deposit total has been updated to $${amount}.`,
-        subject: "Active deposit updated",
         title: "Deposit updated",
       },
       withdraw: {
-        email: `Hello ${user.fullName || "there"}, your lifetime withdrawal total has been updated to $${amount}.`,
         notification: `Your lifetime withdrawal total has been updated to $${amount}.`,
-        subject: "Withdrawal total updated",
         title: "Withdrawal total updated",
       },
       set_withdrawn: {
-        email: `Hello ${user.fullName || "there"}, your lifetime withdrawal total has been updated to $${amount}.`,
         notification: `Your lifetime withdrawal total has been updated to $${amount}.`,
-        subject: "Withdrawal total updated",
         title: "Withdrawal total updated",
       },
     };
@@ -191,12 +178,6 @@ export async function POST(req) {
       message.notification,
       "system",
     );
-
-    try {
-      await sendPlainEmail(user.email, message.subject, message.email);
-    } catch (emailError) {
-      console.error("Admin account action email failed", emailError);
-    }
 
     return Response.json({ account, record }, { status: 201 });
   } catch (error) {

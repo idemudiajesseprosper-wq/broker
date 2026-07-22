@@ -20,14 +20,14 @@ You can start editing the page by modifying `app/page.js`. The page auto-updates
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## Smartsupp replies from Zoho Mail
+## Smartsupp replies from Zoho Mail or Spark
 
 The application exposes a signed two-way bridge:
 
 - `POST /api/webhooks/smartsupp` emails new visitor messages to the configured
   `ZOHO_SUPPORT_EMAIL` address.
-- Replies sent from that Zoho mailbox are accepted at
-  `POST /api/webhooks/zoho` and posted to the matching Smartsupp conversation.
+- Replies sent from that Zoho mailbox are received by Resend at
+  `POST /api/webhooks/resend` and posted to the matching Smartsupp conversation.
 
 Required deployment variables:
 
@@ -35,7 +35,8 @@ Required deployment variables:
 SMARTSUPP_ACCESS_TOKEN=...
 SMARTSUPP_WEBHOOK_SECRET=...
 ZOHO_SUPPORT_EMAIL=support@bsxcapitalexchange.com
-ZOHO_WEBHOOK_SECRET=...
+RESEND_REPLY_EMAIL=anything@your-id.resend.app
+RESEND_WEBHOOK_SECRET=whsec_...
 ```
 
 Ask Smartsupp support to subscribe the deployed
@@ -43,14 +44,13 @@ Ask Smartsupp support to subscribe the deployed
 `conversation.contact_replied` event. Save the integration's shared secret as
 `SMARTSUPP_WEBHOOK_SECRET`.
 
-In Zoho Mail, open **Settings > Integrations > Developer Space > Outgoing
-Webhooks** and create a Mail webhook pointing to
-`https://YOUR_DOMAIN/api/webhooks/zoho`. Filter it to messages from
-`support@bsxcapitalexchange.com` whose subject contains
-`[Smartsupp conversation:`. Leave **Limited Data List** disabled so the reply
-body is included. Zoho sends `X-Hook-Secret` on the first registration request;
-copy that value from the deployment logs into `ZOHO_WEBHOOK_SECRET`, redeploy,
-and then enable the webhook.
+In Resend, open **Emails > Receiving**, copy the managed `*.resend.app`
+receiving address into `RESEND_REPLY_EMAIL`, then create a webhook pointing to
+`https://YOUR_DOMAIN/api/webhooks/resend` with the `email.received` event.
+Copy its signing secret into `RESEND_WEBHOOK_SECRET`. The notification's
+Reply-To address will use the Resend inbox, so replying from either Zoho Mail or
+Spark sends the response through this signed bridge without requiring Zoho
+Developer Space.
 
 ## Learn More
 

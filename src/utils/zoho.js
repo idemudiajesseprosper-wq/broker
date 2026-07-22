@@ -24,10 +24,15 @@ function getMessageText(message) {
 
 export async function notifyZohoSmartsuppMessage({ conversation, message }) {
   const zohoEmail = process.env.ZOHO_SUPPORT_EMAIL;
+  const replyEmail = process.env.RESEND_REPLY_EMAIL;
   const conversationId = conversation?.id;
 
   if (!zohoEmail) {
     return { skipped: true, reason: "ZOHO_SUPPORT_EMAIL is not configured" };
+  }
+
+  if (!replyEmail) {
+    return { skipped: true, reason: "RESEND_REPLY_EMAIL is not configured" };
   }
 
   if (!conversationId) {
@@ -46,7 +51,7 @@ export async function notifyZohoSmartsuppMessage({ conversation, message }) {
       <p>Reply to this email to send your response back into the visitor's Smartsupp conversation.</p>
       <p><small>Conversation ID: ${escapeHtml(conversationId)}</small></p>
     `,
-    replyTo: zohoEmail,
+    replyTo: replyEmail,
     subject: `[${SMARTSUPP_SUBJECT_PREFIX}: ${conversationId}] New visitor message`,
     to: zohoEmail,
   });

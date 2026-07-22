@@ -49,6 +49,25 @@ export async function sendEmail({ to, subject, html, replyTo }) {
   return response.json();
 }
 
+export async function getReceivedEmail(emailId) {
+  if (!process.env.RESEND_API_KEY) {
+    throw new Error("RESEND_API_KEY is not defined");
+  }
+
+  const response = await fetch(
+    `https://api.resend.com/emails/receiving/${encodeURIComponent(emailId)}`,
+    { headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}` } },
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      `Could not retrieve Resend email: ${await response.text()}`,
+    );
+  }
+
+  return response.json();
+}
+
 export async function sendVerificationEmail(email, token) {
   const verificationUrl = buildUrl("/verify-email", token);
 

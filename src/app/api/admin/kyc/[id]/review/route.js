@@ -4,7 +4,6 @@ import KYC from "@/models/KYC";
 import User from "@/models/User";
 import { badRequest, notFound, serverError } from "@/utils/api";
 import { createNotification } from "@/utils/createNotification";
-import { sendPlainEmail } from "@/utils/email";
 
 export const runtime = "nodejs";
 
@@ -32,7 +31,7 @@ export async function PUT(req, context) {
     kyc.reviewedBy = admin.userId;
     await kyc.save();
 
-    const user = await User.findByIdAndUpdate(
+    await User.findByIdAndUpdate(
       kyc.userId,
       { kycStatus: status },
       { new: true },
@@ -46,16 +45,6 @@ export async function PUT(req, context) {
         : `Your KYC was rejected. ${rejectionReason || ""}`.trim(),
       "kyc",
     );
-
-    if (user) {
-      await sendPlainEmail(
-        user.email,
-        "KYC review complete",
-        status === "approved"
-          ? "Your KYC has been approved."
-          : `Your KYC was rejected. ${rejectionReason || ""}`.trim(),
-      );
-    }
 
     return Response.json({ kyc }, { status: 200 });
   } catch (error) {

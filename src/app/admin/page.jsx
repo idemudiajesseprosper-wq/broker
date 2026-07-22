@@ -224,6 +224,12 @@ export default function AdminPage() {
   const [accountActions, setAccountActions] = useState({});
   const [confirmation, setConfirmation] = useState(null);
   const [confirmationLoading, setConfirmationLoading] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    confirmPassword: "",
+    currentPassword: "",
+    newPassword: "",
+  });
+  const [passwordLoading, setPasswordLoading] = useState(false);
   const notificationForm = useForm({
     defaultValues: { message: "", target: "all", title: "" },
   });
@@ -493,6 +499,42 @@ export default function AdminPage() {
         method: "PUT",
       },
       `Transaction ${action === "approve" ? "approved" : "rejected"}`,
+    );
+  }
+
+  async function changeAdminPassword(event) {
+    event.preventDefault();
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      toast.error("Password not changed", "New passwords do not match.");
+      return;
+    }
+
+    setPasswordLoading(true);
+    const response = await fetch("/api/admin/change-password", {
+      body: JSON.stringify(passwordForm),
+      headers: { "Content-Type": "application/json" },
+      method: "PUT",
+    });
+    const payload = await response.json().catch(() => ({}));
+    setPasswordLoading(false);
+
+    if (!response.ok) {
+      toast.error(
+        "Password not changed",
+        payload.error || "Check your password and try again.",
+      );
+      return;
+    }
+
+    setPasswordForm({
+      confirmPassword: "",
+      currentPassword: "",
+      newPassword: "",
+    });
+    toast.success(
+      "Password changed",
+      "Use the new password next time you sign in.",
     );
   }
 
@@ -817,6 +859,58 @@ export default function AdminPage() {
               <Input placeholder="Email sender address" />
               <Button>Save Settings</Button>
             </div>
+          </Card>
+          <Card>
+            <h3 className="text-lg font-semibold">Change admin password</h3>
+            <p className="mb-4 mt-1 text-sm opacity-60">
+              Confirm your current password before choosing a new one.
+            </p>
+            <form className="grid gap-3" onSubmit={changeAdminPassword}>
+              <Input
+                autoComplete="current-password"
+                onChange={(event) =>
+                  setPasswordForm((current) => ({
+                    ...current,
+                    currentPassword: event.target.value,
+                  }))
+                }
+                placeholder="Current password"
+                required
+                type="password"
+                value={passwordForm.currentPassword}
+              />
+              <Input
+                autoComplete="new-password"
+                minLength={8}
+                onChange={(event) =>
+                  setPasswordForm((current) => ({
+                    ...current,
+                    newPassword: event.target.value,
+                  }))
+                }
+                placeholder="New password"
+                required
+                type="password"
+                value={passwordForm.newPassword}
+              />
+              <Input
+                autoComplete="new-password"
+                minLength={8}
+                onChange={(event) =>
+                  setPasswordForm((current) => ({
+                    ...current,
+                    confirmPassword: event.target.value,
+                  }))
+                }
+                placeholder="Confirm new password"
+                required
+                type="password"
+                value={passwordForm.confirmPassword}
+              />
+              <Button disabled={passwordLoading} type="submit">
+                {passwordLoading ? "Changing password..." : "Change password"}
+              </Button>
+            </form>
           </Card>
         </div>
       ) : null}
