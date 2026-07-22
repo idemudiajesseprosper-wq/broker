@@ -24,6 +24,9 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 
 The application exposes a signed two-way bridge:
 
+- The chat widget posts each visitor message to `POST /api/support/message`,
+  which immediately emails it to `ZOHO_SUPPORT_EMAIL` without depending on a
+  Smartsupp webhook.
 - `POST /api/webhooks/smartsupp` emails new visitor messages to the configured
   `ZOHO_SUPPORT_EMAIL` address.
 - Replies sent from that Zoho mailbox are received by Resend at

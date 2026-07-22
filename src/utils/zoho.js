@@ -75,3 +75,30 @@ export async function notifyZohoChatStart({ message, pageUrl, visitorId }) {
     to: zohoEmail,
   });
 }
+
+export async function notifyZohoDirectSmartsuppMessage({
+  conversationId,
+  message,
+  pageUrl,
+  visitorId,
+}) {
+  const zohoEmail = process.env.ZOHO_SUPPORT_EMAIL;
+
+  if (!zohoEmail) {
+    return { skipped: true, reason: "ZOHO_SUPPORT_EMAIL is not configured" };
+  }
+
+  const threadId = conversationId || visitorId || "unknown-visitor";
+
+  return sendEmail({
+    html: `
+      <p>A website visitor sent a Smartsupp message:</p>
+      <blockquote>${escapeHtml(message)}</blockquote>
+      <p><strong>Page:</strong> ${escapeHtml(pageUrl)}</p>
+      <p><strong>Chat ID:</strong> ${escapeHtml(threadId)}</p>
+      <p><small>This notification was sent directly by the website and does not depend on a Smartsupp webhook.</small></p>
+    `,
+    subject: `[Smartsupp: ${threadId}] Website conversation`,
+    to: zohoEmail,
+  });
+}

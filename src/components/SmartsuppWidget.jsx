@@ -45,6 +45,31 @@ export default function SmartsuppWidget() {
           window.smartsupp = window.smartsupp || function() {
             (window.smartsupp._ = window.smartsupp._ || []).push(arguments);
           };
+          window.smartsupp("on", "message_sent", function(message) {
+            var text = typeof message === "string"
+              ? message
+              : message && message.content && message.content.text
+                ? message.content.text
+                : message && (message.text || message.content);
+
+            if (typeof text !== "string" || !text.trim()) {
+              return;
+            }
+
+            fetch("/api/support/message", {
+              body: JSON.stringify({
+                conversationId: message && (message.conversation_id || message.conversationId),
+                message: text.trim(),
+                pageUrl: window.location.href,
+                visitorId: window.smartsupp.vid,
+              }),
+              headers: { "Content-Type": "application/json" },
+              keepalive: true,
+              method: "POST",
+            }).catch(function(error) {
+              console.error("Could not notify support by email:", error);
+            });
+          });
           if (!document.getElementById("smartsupp-loader")) {
             var loader = document.createElement("script");
             loader.id = "smartsupp-loader";
