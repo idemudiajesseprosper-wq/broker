@@ -1,10 +1,20 @@
 "use client";
 
 import Script from "next/script";
+import { useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
 
 export default function SmartsuppWidget() {
+  const { user } = useAuth();
   const smartsuppKey = process.env.NEXT_PUBLIC_SMARTSUPP_KEY;
   const chatStorageMigration = "2026-07-21-widget-right-1";
+
+  useEffect(() => {
+    if (!user || typeof window.smartsupp !== "function") return;
+
+    window.smartsupp("name", user.fullName);
+    window.smartsupp("email", user.email);
+  }, [user]);
 
   if (!smartsuppKey) {
     return null;
@@ -58,7 +68,6 @@ export default function SmartsuppWidget() {
 
             fetch("/api/support/message", {
               body: JSON.stringify({
-                conversationId: message && (message.conversation_id || message.conversationId),
                 message: text.trim(),
                 pageUrl: window.location.href,
                 visitorId: window.smartsupp.vid,

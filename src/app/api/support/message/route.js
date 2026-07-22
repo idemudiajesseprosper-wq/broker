@@ -1,7 +1,25 @@
+import { protect } from "@root/middleware/auth";
+import { connectDB } from "@/config/db";
+import User from "@/models/User";
 import { badRequest, serverError } from "@/utils/api";
 import { notifyZohoDirectSmartsuppMessage } from "@/utils/zoho";
 
 export const runtime = "nodejs";
+
+async function getClient(req) {
+  try {
+    const { userId } = protect(req);
+    await connectDB();
+    const user = await User.findById(userId).select("email fullName").lean();
+
+    return user
+      ? { email: user.email, name: user.fullName }
+      : { email: "", name: "Website visitor" };
+  } catch (error) {
+    if (error.message !== "Unauthorized") throw error;
+    return { email: "", name: "Website visitor" };
+  }
+}
 
 export async function POST(req) {
   try {
@@ -9,10 +27,6 @@ export async function POST(req) {
     const message = typeof body.message === "string" ? body.message.trim() : "";
     const pageUrl =
       typeof body.pageUrl === "string" ? body.pageUrl.slice(0, 2000) : "";
-    const conversationId =
-      typeof body.conversationId === "string"
-        ? body.conversationId.slice(0, 100)
-        : "";
     const visitorId =
       typeof body.visitorId === "string" ? body.visitorId.slice(0, 100) : "";
 
@@ -24,8 +38,9 @@ export async function POST(req) {
       return badRequest("Message is too long");
     }
 
+    const client = await getClient(req);
     const result = await notifyZohoDirectSmartsuppMessage({
-      conversationId,
+      client,
       message,
       pageUrl,
       visitorId,

@@ -20,40 +20,20 @@ You can start editing the page by modifying `app/page.js`. The page auto-updates
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## Smartsupp replies from Zoho Mail or Spark
+## Smartsupp missed-message notifications
 
-The application exposes a signed two-way bridge:
-
-- The chat widget posts each visitor message to `POST /api/support/message`,
-  which immediately emails it to `ZOHO_SUPPORT_EMAIL` without depending on a
-  Smartsupp webhook.
-- `POST /api/webhooks/smartsupp` emails new visitor messages to the configured
-  `ZOHO_SUPPORT_EMAIL` address.
-- Replies sent from that Zoho mailbox are received by Resend at
-  `POST /api/webhooks/resend` and posted to the matching Smartsupp conversation.
+The chat widget posts every visitor message to `POST /api/support/message`.
+The server immediately emails the message and the authenticated client's contact
+details to `ZOHO_SUPPORT_EMAIL`. This is a one-way notification: replies are not
+sent back to Smartsupp or the website. Contact the client directly using the
+email address included in the notification.
 
 Required deployment variables:
 
 ```text
 SMARTSUPP_ACCESS_TOKEN=...
-SMARTSUPP_WEBHOOK_SECRET=...
 ZOHO_SUPPORT_EMAIL=support@bsxcapitalexchange.com
-RESEND_REPLY_EMAIL=anything@your-id.resend.app
-RESEND_WEBHOOK_SECRET=whsec_...
 ```
-
-Ask Smartsupp support to subscribe the deployed
-`https://YOUR_DOMAIN/api/webhooks/smartsupp` URL to the
-`conversation.contact_replied` event. Save the integration's shared secret as
-`SMARTSUPP_WEBHOOK_SECRET`.
-
-In Resend, open **Emails > Receiving**, copy the managed `*.resend.app`
-receiving address into `RESEND_REPLY_EMAIL`, then create a webhook pointing to
-`https://YOUR_DOMAIN/api/webhooks/resend` with the `email.received` event.
-Copy its signing secret into `RESEND_WEBHOOK_SECRET`. The notification's
-Reply-To address will use the Resend inbox, so replying from either Zoho Mail or
-Spark sends the response through this signed bridge without requiring Zoho
-Developer Space.
 
 ## Learn More
 

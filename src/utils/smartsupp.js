@@ -49,13 +49,6 @@ export async function smartsuppRequest(path, options = {}) {
   return data;
 }
 
-export async function replyToSmartsuppConversation(conversationId, text) {
-  return smartsuppRequest(`/conversations/${conversationId}/messages`, {
-    body: JSON.stringify({ text }),
-    method: "POST",
-  });
-}
-
 function getContactId(payload) {
   return payload?.contact?.id || payload?.id || payload?.contact_id;
 }
@@ -110,41 +103,6 @@ export async function notifySmartsuppSignup(user) {
         Full_name: user.fullName,
         Phone: user.phone,
         User_ID: String(user._id),
-      },
-    }),
-    method: "POST",
-  });
-}
-
-export async function notifySmartsuppChatStart({
-  message,
-  pageUrl,
-  visitorId,
-}) {
-  const contact = await createSmartsuppContact({
-    _id: visitorId,
-    email: null,
-    fullName: "Website visitor",
-    phone: null,
-  });
-
-  if (contact?.skipped) return contact;
-
-  const contactId = getContactId(contact);
-
-  if (!contactId) {
-    throw new Error("Smartsupp contact id was not returned");
-  }
-
-  return smartsuppRequest("/conversations", {
-    body: JSON.stringify({
-      contact_id: contactId,
-      ext_id: `website-chat-${visitorId}`,
-      text: message,
-      variables: {
-        Event: "Website chat started",
-        Page_url: pageUrl,
-        Visitor_ID: visitorId,
       },
     }),
     method: "POST",

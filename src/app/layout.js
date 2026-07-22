@@ -29,9 +29,11 @@ export default function RootLayout({ children }) {
     >
       <body className="min-h-full bg-[#050508] text-white">
         <ToastProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            {children}
+            <SmartsuppWidget />
+          </AuthProvider>
         </ToastProvider>
-        <SmartsuppWidget />
       </body>
     </html>
   );
