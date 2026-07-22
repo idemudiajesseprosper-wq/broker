@@ -36,7 +36,7 @@ const investmentPlanSchema = new mongoose.Schema({
   },
   currencySymbol: {
     type: String,
-    default: "£",
+    default: "$",
   },
   durationDays: {
     type: Number,

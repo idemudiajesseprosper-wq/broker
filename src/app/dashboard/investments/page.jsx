@@ -20,10 +20,10 @@ import {
   StatusBadge,
 } from "@/components/dashboard/DashboardPageKit";
 import { Button } from "@/components/ui/button";
-import { Input, Select } from "@/components/ui/input";
+import { Select } from "@/components/ui/input";
 import { useToast } from "@/context/ToastContext";
 
-function formatPackageMoney(value, symbol = "£") {
+function formatPackageMoney(value, symbol = "$") {
   return `${symbol}${new Intl.NumberFormat("en-US", {
     maximumFractionDigits: 0,
   }).format(Number(value) || 0)}`;
@@ -45,8 +45,8 @@ function packageAmount(plan) {
   return Number(plan.defaultAmount || plan.minAmount || 0);
 }
 
-function PackagePlanCard({ amount, onAmountChange, onJoin, plan, submitting }) {
-  const symbol = plan.currencySymbol || "£";
+function PackagePlanCard({ onDeposit, plan }) {
+  const symbol = "$";
   const defaultAmount = packageAmount(plan);
 
   return (
@@ -89,33 +89,11 @@ function PackagePlanCard({ amount, onAmountChange, onJoin, plan, submitting }) {
         ))}
       </dl>
 
-      <div className="mt-10">
-        <label
-          className="mb-3 block text-sm text-white"
-          htmlFor={`investment-amount-${plan._id}`}
-        >
-          Amount to invest: ({formatPackageMoney(defaultAmount, symbol)}{" "}
-          default)
-        </label>
-        <Input
-          className="h-12 border-white/10 bg-[#11162a] text-white placeholder:text-white/45"
-          id={`investment-amount-${plan._id}`}
-          max={plan.maxAmount}
-          min={plan.minAmount}
-          onChange={(event) => onAmountChange(plan._id, event.target.value)}
-          placeholder={formatPackageMoney(defaultAmount, symbol)}
-          step="0.01"
-          type="number"
-          value={amount}
-        />
-      </div>
-
       <Button
-        className="mt-6 h-12 w-full rounded-full bg-[#2186f3] text-white hover:bg-[#3193ff]"
-        disabled={submitting}
-        onClick={() => onJoin(plan)}
+        className="mt-10 h-12 w-full rounded-full bg-[#2186f3] text-white hover:bg-[#3193ff]"
+        onClick={onDeposit}
       >
-        {submitting ? "Joining..." : "Join plan"}
+        Deposit to invest
       </Button>
     </article>
   );
@@ -123,7 +101,7 @@ function PackagePlanCard({ amount, onAmountChange, onJoin, plan, submitting }) {
 
 function MyPackageCard({ investment }) {
   const plan = investment.planId || {};
-  const symbol = plan.currencySymbol || "£";
+  const symbol = "$";
 
   return (
     <article className="rounded-[6px] border border-white/12 bg-[#151a31] p-5">
@@ -160,9 +138,7 @@ export default function InvestmentsPage() {
   const [account, setAccount] = useState(null);
   const [plans, setPlans] = useState([]);
   const [investments, setInvestments] = useState([]);
-  const [amounts, setAmounts] = useState({});
   const [loading, setLoading] = useState(true);
-  const [submittingPlan, setSubmittingPlan] = useState("");
   const activeView =
     searchParams.get("view") === "packages" ? "packages" : "plans";
 
@@ -223,39 +199,6 @@ export default function InvestmentsPage() {
 
   function setView(view) {
     router.push(`/dashboard/investments?view=${view}`);
-  }
-
-  function updateAmount(planId, value) {
-    setAmounts((current) => ({
-      ...current,
-      [planId]: value,
-    }));
-  }
-
-  async function subscribe(plan) {
-    const amount = amounts[plan._id] || packageAmount(plan);
-    setSubmittingPlan(plan._id);
-
-    try {
-      const response = await fetch("/api/investments/subscribe", {
-        body: JSON.stringify({ amount, planId: plan._id }),
-        headers: { "Content-Type": "application/json" },
-        method: "POST",
-      });
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || data.message || "Unable to join package");
-      }
-
-      toast.success("Package joined", `${plan.name} is now active.`);
-      await loadData();
-      setView("packages");
-    } catch (error) {
-      toast.error("Package failed", error.message);
-    } finally {
-      setSubmittingPlan("");
-    }
   }
 
   if (loading) {
@@ -350,12 +293,9 @@ export default function InvestmentsPage() {
             <div className="grid gap-6 xl:grid-cols-2">
               {plans.map((plan) => (
                 <PackagePlanCard
-                  amount={amounts[plan._id] || ""}
                   key={plan._id}
-                  onAmountChange={updateAmount}
-                  onJoin={subscribe}
+                  onDeposit={() => router.push("/dashboard/deposit")}
                   plan={plan}
-                  submitting={submittingPlan === plan._id}
                 />
               ))}
             </div>

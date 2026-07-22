@@ -2,7 +2,7 @@ import InvestmentPlan from "@/models/InvestmentPlan";
 
 export const defaultInvestmentPlans = [
   {
-    currencySymbol: "£",
+    currencySymbol: "$",
     defaultAmount: 500,
     description: "Starter package for new investors.",
     durationDays: 7,
@@ -15,7 +15,7 @@ export const defaultInvestmentPlans = [
     roiPercent: 14,
   },
   {
-    currencySymbol: "£",
+    currencySymbol: "$",
     defaultAmount: 1000,
     description: "Standard package for growing weekly returns.",
     durationDays: 7,
@@ -28,7 +28,7 @@ export const defaultInvestmentPlans = [
     roiPercent: 8,
   },
   {
-    currencySymbol: "£",
+    currencySymbol: "$",
     defaultAmount: 5000,
     description: "Premium package for larger weekly subscriptions.",
     durationDays: 7,
@@ -44,10 +44,10 @@ export const defaultInvestmentPlans = [
 
 export async function ensureDefaultInvestmentPlans() {
   await Promise.all(
-    defaultInvestmentPlans.map((plan) =>
+    defaultInvestmentPlans.map(({ currencySymbol, ...plan }) =>
       InvestmentPlan.updateOne(
         { name: plan.name },
-        { $setOnInsert: plan },
+        { $set: { currencySymbol }, $setOnInsert: plan },
         { upsert: true },
       ),
     ),

@@ -5,8 +5,7 @@ import Bonus from "@/models/Bonus";
 import Investment from "@/models/Investment";
 import InvestmentPlan from "@/models/InvestmentPlan";
 import Transaction from "@/models/Transaction";
-import User from "@/models/User";
-import { badRequest, forbidden, serverError } from "@/utils/api";
+import { badRequest, serverError } from "@/utils/api";
 import { fetchBtcUsdPrice } from "@/utils/bitcoin";
 import { createNotification } from "@/utils/createNotification";
 
@@ -24,15 +23,10 @@ export async function POST(req) {
       return badRequest("Plan and amount are required");
     }
 
-    const [user, account, plan] = await Promise.all([
-      User.findById(userId),
+    const [account, plan] = await Promise.all([
       Account.findOne({ userId }),
       InvestmentPlan.findById(planId),
     ]);
-
-    if (!user || user.kycStatus !== "approved") {
-      return forbidden("KYC approval is required to invest");
-    }
 
     if (!plan || !plan.isActive) {
       return badRequest("Investment plan is not available");
