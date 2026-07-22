@@ -1,0 +1,72 @@
+import { sendEmail } from "@/utils/email";
+
+export const SMARTSUPP_SUBJECT_PREFIX = "Smartsupp conversation";
+
+function escapeHtml(value) {
+  return String(value || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function getMessageText(message) {
+  if (typeof message === "string") return message;
+
+  return (
+    message?.content?.text ||
+    message?.content ||
+    message?.text ||
+    "A visitor sent a new message."
+  );
+}
+
+export async function notifyZohoSmartsuppMessage({ conversation, message }) {
+  const zohoEmail = process.env.ZOHO_SUPPORT_EMAIL;
+  const conversationId = conversation?.id;
+
+  if (!zohoEmail) {
+    return { skipped: true, reason: "ZOHO_SUPPORT_EMAIL is not configured" };
+  }
+
+  if (!conversationId) {
+    throw new Error("Smartsupp conversation id was not provided");
+  }
+
+  const visitorName =
+    conversation?.contact?.name ||
+    conversation?.visitor?.name ||
+    "Website visitor";
+
+  return sendEmail({
+    html: `
+      <p><strong>${escapeHtml(visitorName)}</strong> sent a Smartsupp message:</p>
+      <blockquote>${escapeHtml(getMessageText(message))}</blockquote>
+      <p>Reply to this email to send your response back into the visitor's Smartsupp conversation.</p>
+      <p><small>Conversation ID: ${escapeHtml(conversationId)}</small></p>
+    `,
+    replyTo: zohoEmail,
+    subject: `[${SMARTSUPP_SUBJECT_PREFIX}: ${conversationId}] New visitor message`,
+    to: zohoEmail,
+  });
+}
+
+export async function notifyZohoChatStart({ message, pageUrl, visitorId }) {
+  const zohoEmail = process.env.ZOHO_SUPPORT_EMAIL;
+
+  if (!zohoEmail) {
+    return { skipped: true, reason: "ZOHO_SUPPORT_EMAIL is not configured" };
+  }
+
+  return sendEmail({
+    html: `
+      <p>A website visitor started a support chat.</p>
+      <p><strong>Message:</strong> ${escapeHtml(message)}</p>
+      <p><strong>Page:</strong> ${escapeHtml(pageUrl)}</p>
+      <p><strong>Visitor ID:</strong> ${escapeHtml(visitorId)}</p>
+    `,
+    subject: "Website chat waiting for support",
+    to: zohoEmail,
+  });
+}

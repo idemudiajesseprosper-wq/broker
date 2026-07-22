@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import { serverError } from "@/utils/api";
 import { notifySmartsuppChatStart } from "@/utils/smartsupp";
-import { notifyTitanChatStart } from "@/utils/titan";
+import { notifyZohoChatStart } from "@/utils/zoho";
 
 export const runtime = "nodejs";
 
@@ -27,14 +27,14 @@ export async function POST(req) {
     }
 
     try {
-      results.titan = await notifyTitanChatStart({
+      results.zoho = await notifyZohoChatStart({
         message: supportMessage,
         pageUrl,
         visitorId,
       });
     } catch (error) {
-      console.error("Titan chat-start notification failed:", error);
-      results.titan = { error: error.message };
+      console.error("Zoho chat-start notification failed:", error);
+      results.zoho = { error: error.message };
     }
 
     return Response.json(

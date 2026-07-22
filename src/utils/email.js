@@ -12,7 +12,7 @@ export function buildUrl(path, token) {
   return url.toString();
 }
 
-export async function sendEmail({ to, subject, html }) {
+export async function sendEmail({ to, subject, html, replyTo }) {
   if (!process.env.RESEND_API_KEY) {
     if (canSkipEmail()) {
       console.info(
@@ -35,6 +35,7 @@ export async function sendEmail({ to, subject, html }) {
         process.env.RESEND_FROM_EMAIL ||
         "Bitcoin Broker <onboarding@resend.dev>",
       html,
+      ...(replyTo ? { reply_to: replyTo } : {}),
       subject,
       to,
     }),

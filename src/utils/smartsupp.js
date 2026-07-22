@@ -4,7 +4,7 @@ function getSmartsuppToken() {
   return process.env.SMARTSUPP_ACCESS_TOKEN;
 }
 
-async function smartsuppRequest(path, options = {}) {
+export async function smartsuppRequest(path, options = {}) {
   const token = getSmartsuppToken();
 
   if (!token) {
@@ -47,6 +47,13 @@ async function smartsuppRequest(path, options = {}) {
   }
 
   return data;
+}
+
+export async function replyToSmartsuppConversation(conversationId, text) {
+  return smartsuppRequest(`/conversations/${conversationId}/messages`, {
+    body: JSON.stringify({ text }),
+    method: "POST",
+  });
 }
 
 function getContactId(payload) {
