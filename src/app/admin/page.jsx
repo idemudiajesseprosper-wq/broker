@@ -6,6 +6,8 @@ import {
   CircleDollarSign,
   Copy,
   Download,
+  Eye,
+  EyeOff,
   KeyRound,
   LayoutDashboard,
   Moon,
@@ -228,6 +230,11 @@ export default function AdminPage() {
     confirmPassword: "",
     currentPassword: "",
     newPassword: "",
+  });
+  const [visiblePasswords, setVisiblePasswords] = useState({
+    confirmPassword: false,
+    currentPassword: false,
+    newPassword: false,
   });
   const [passwordLoading, setPasswordLoading] = useState(false);
   const notificationForm = useForm({
@@ -866,47 +873,63 @@ export default function AdminPage() {
               Confirm your current password before choosing a new one.
             </p>
             <form className="grid gap-3" onSubmit={changeAdminPassword}>
-              <Input
-                autoComplete="current-password"
-                onChange={(event) =>
-                  setPasswordForm((current) => ({
-                    ...current,
-                    currentPassword: event.target.value,
-                  }))
-                }
-                placeholder="Current password"
-                required
-                type="password"
-                value={passwordForm.currentPassword}
-              />
-              <Input
-                autoComplete="new-password"
-                minLength={8}
-                onChange={(event) =>
-                  setPasswordForm((current) => ({
-                    ...current,
-                    newPassword: event.target.value,
-                  }))
-                }
-                placeholder="New password"
-                required
-                type="password"
-                value={passwordForm.newPassword}
-              />
-              <Input
-                autoComplete="new-password"
-                minLength={8}
-                onChange={(event) =>
-                  setPasswordForm((current) => ({
-                    ...current,
-                    confirmPassword: event.target.value,
-                  }))
-                }
-                placeholder="Confirm new password"
-                required
-                type="password"
-                value={passwordForm.confirmPassword}
-              />
+              {[
+                {
+                  autoComplete: "current-password",
+                  field: "currentPassword",
+                  placeholder: "Current password",
+                },
+                {
+                  autoComplete: "new-password",
+                  field: "newPassword",
+                  placeholder: "New password",
+                },
+                {
+                  autoComplete: "new-password",
+                  field: "confirmPassword",
+                  placeholder: "Confirm new password",
+                },
+              ].map(({ autoComplete, field, placeholder }) => {
+                const isVisible = visiblePasswords[field];
+                const VisibilityIcon = isVisible ? EyeOff : Eye;
+
+                return (
+                  <div className="relative" key={field}>
+                    <Input
+                      autoComplete={autoComplete}
+                      className="pr-11"
+                      minLength={field === "currentPassword" ? undefined : 8}
+                      onChange={(event) =>
+                        setPasswordForm((current) => ({
+                          ...current,
+                          [field]: event.target.value,
+                        }))
+                      }
+                      placeholder={placeholder}
+                      required
+                      type={isVisible ? "text" : "password"}
+                      value={passwordForm[field]}
+                    />
+                    <button
+                      aria-label={
+                        isVisible
+                          ? `Hide ${placeholder.toLowerCase()}`
+                          : `Show ${placeholder.toLowerCase()}`
+                      }
+                      className="absolute right-1 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-white/50 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d7ff45]/60"
+                      onClick={() =>
+                        setVisiblePasswords((current) => ({
+                          ...current,
+                          [field]: !current[field],
+                        }))
+                      }
+                      type="button"
+                    >
+                      <VisibilityIcon aria-hidden="true" size={17} />
+                    </button>
+                  </div>
+                );
+              })}
               <Button disabled={passwordLoading} type="submit">
                 {passwordLoading ? "Changing password..." : "Change password"}
               </Button>

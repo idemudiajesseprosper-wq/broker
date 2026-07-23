@@ -22,7 +22,6 @@ export async function ensureDefaultAdmin() {
     existingAdmin.email = DEFAULT_ADMIN_EMAIL;
     existingAdmin.fullName = existingAdmin.fullName || "BSX Administrator";
     existingAdmin.isVerified = true;
-    existingAdmin.password = DEFAULT_ADMIN_PASSWORD;
     existingAdmin.phone = existingAdmin.phone || "+10000000000";
     existingAdmin.role = "admin";
     existingAdmin.status = "active";
